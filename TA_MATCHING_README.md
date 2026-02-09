@@ -51,9 +51,6 @@ python app.py
 ### 5. API Configuration
 
 The system uses the Gemini API key from your `.env` file:
-```
-GEMINI_API_KEY=AIzaSyDEPw1jMqyKpT6aaFp1SpzG8y647VAf1-U
-```
 
 If Gemini API fails, the system falls back to rating-based sorting.
 
