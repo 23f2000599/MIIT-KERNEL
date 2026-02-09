@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Teaching Statistics</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Student Ratings</h5>
+            </div>
+            <div class="card-body text-center">
+                <h3 class="text-primary">{{ "%.1f"|format(rating_stats[0] or 0) }}/5.0</h3>
+                <p>Based on {{ rating_stats[1] or 0 }} reviews</p>
+                <div class="rating-breakdown">
+                    <div class="d-flex justify-content-between">
+                        <span>5 stars</span>
+                        <div class="progress flex-grow-1 mx-2">
+                            <div class="progress-bar" style="width: 60%"></div>
+                        </div>
+                        <span>60%</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>4 stars</span>
+                        <div class="progress flex-grow-1 mx-2">
+                            <div class="progress-bar" style="width: 30%"></div>
+                        </div>
+                        <span>30%</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>3 stars</span>
+                        <div class="progress flex-grow-1 mx-2">
+                            <div class="progress-bar" style="width: 10%"></div>
+                        </div>
+                        <span>10%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Teaching Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="metric-item mb-3">
+                    <h6>Total Teaching Hours</h6>
+                    <h4 class="text-success">24h 30m</h4>
+                </div>
+                <div class="metric-item mb-3">
+                    <h6>Students Helped</h6>
+                    <h4 class="text-info">15</h4>
+                </div>
+                <div class="metric-item mb-3">
+                    <h6>Notes Shared</h6>
+                    <h4 class="text-warning">8</h4>
+                </div>
+                <div class="metric-item">
+                    <h6>Response Rate</h6>
+                    <h4 class="text-primary">95%</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Student Engagement</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="engagementChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('engagementChart').getContext('2d');
+const engagementChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [{
+            label: 'Active Students',
+            data: [3, 5, 4, 6],
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

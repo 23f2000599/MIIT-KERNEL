@@ -1,0 +1,8 @@
+Flask==2.3.3
+Flask-SocketIO==5.3.6
+SQLAlchemy>=2.0.25
+Werkzeug==2.3.7
+deepgram-sdk==3.2.7
+python-socketio==5.9.0
+python-engineio==4.7.1
+eventlet==0.33.3

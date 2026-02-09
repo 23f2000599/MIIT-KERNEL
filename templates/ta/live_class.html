@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Live Classes{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Live Class Management 🎓</h1>
+    <p>Conduct live sessions and manage your teaching schedule</p>
+</div>
+
+<div class="card">
+    <h3>🚀 Quick Start</h3>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn btn-success" onclick="startInstantSession()">Start Instant Session</button>
+        <button class="btn" onclick="scheduleSession()">Schedule Session</button>
+        <button class="btn" onclick="joinExisting()">Join Existing Session</button>
+    </div>
+</div>
+
+{% if sessions %}
+<div class="card">
+    <h3>📅 Your Sessions</h3>
+    <div class="grid">
+        {% for session in sessions %}
+        <div class="card" style="border: 2px solid {% if session.is_active %}#27ae60{% else %}#95a5a6{% endif %};">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>{{ session.title }}</h3>
+                {% if session.is_active %}
+                <span style="background: #27ae60; color: white; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.8rem;">
+                    🔴 LIVE
+                </span>
+                {% else %}
+                <span style="background: #95a5a6; color: white; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.8rem;">
+                    Scheduled
+                </span>
+                {% endif %}
+            </div>
+            
+            <p style="color: #666; margin-bottom: 1rem;">{{ session.description or 'Interactive learning session' }}</p>
+            
+            <div style="margin-bottom: 1rem;">
+                <p><strong>Duration:</strong> {{ session.duration or 60 }} minutes</p>
+                <p><strong>Start Time:</strong> {{ session.start_time.strftime('%I:%M %p on %B %d') if session.start_time else 'Not scheduled' }}</p>
+                <p><strong>Students:</strong> 5 registered</p>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                {% if session.is_active %}
+                <button class="btn btn-success" onclick="joinSession({{ session.id }})">Join Session</button>
+                <button class="btn btn-danger" onclick="endSession({{ session.id }})">End Session</button>
+                {% else %}
+                <button class="btn" onclick="startSession({{ session.id }})">Start Session</button>
+                <button class="btn" onclick="editSession({{ session.id }})">Edit</button>
+                <button class="btn btn-danger" onclick="cancelSession({{ session.id }})">Cancel</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>📊 Session Analytics</h3>
+    <div class="stats">
+        <div class="stat-item">
+            <h3>15</h3>
+            <p>Total Sessions</p>
+        </div>
+        <div class="stat-item">
+            <h3>45</h3>
+            <p>Students Taught</p>
+        </div>
+        <div class="stat-item">
+            <h3>25h</h3>
+            <p>Teaching Hours</p>
+        </div>
+        <div class="stat-item">
+            <h3>4.9⭐</h3>
+            <p>Session Rating</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🎯 Session Features</h3>
+    <div class="grid">
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📹</div>
+            <h4>HD Video & Audio</h4>
+            <p>Crystal clear communication</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📝</div>
+            <h4>Interactive Whiteboard</h4>
+            <p>Draw and explain concepts</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📱</div>
+            <h4>Screen Sharing</h4>
+            <p>Share presentations and documents</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">💬</div>
+            <h4>Live Chat</h4>
+            <p>Real-time Q&A and discussion</p>
+        </div>
+    </div>
+</div>
+
+<!-- Session Creation Modal -->
+<div id="sessionModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 2rem; border-radius: 10px; max-width: 500px; width: 90%;">
+        <h3>Create New Session</h3>
+        
+        <div style="margin: 1rem 0;">
+            <label style="display: block; margin-bottom: 0.5rem;">Session Title:</label>
+            <input type="text" id="sessionTitle" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;" placeholder="e.g., Advanced Calculus Review">
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <label style="display: block; margin-bottom: 0.5rem;">Description:</label>
+            <textarea id="sessionDescription" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; height: 80px;" placeholder="Brief description of the session..."></textarea>
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <label style="display: block; margin-bottom: 0.5rem;">Duration (minutes):</label>
+            <input type="number" id="sessionDuration" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;" value="60" min="15" max="180">
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <label style="display: block; margin-bottom: 0.5rem;">Start Time:</label>
+            <input type="datetime-local" id="sessionTime" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button class="btn btn-success" onclick="createSession()">Create Session</button>
+            <button class="btn" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function startInstantSession() {
+    const title = prompt('Enter session title:');
+    if (title) {
+        alert(`Starting instant session: "${title}"... (Feature coming soon!)`);
+    }
+}
+
+function scheduleSession() {
+    document.getElementById('sessionModal').style.display = 'flex';
+}
+
+function joinExisting() {
+    alert('Join existing session feature coming soon!');
+}
+
+function joinSession(sessionId) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.9); display: flex; justify-content: center; 
+        align-items: center; z-index: 1000;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 10px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <div style="background: #2c3e50; color: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
+                <h3>🔴 Live Teaching Session</h3>
+                <p>Advanced Calculus Review - Session ${sessionId}</p>
+                <p>5 students connected</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div style="background: #34495e; height: 300px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📹</div>
+                        <p>Main video feed</p>
+                    </div>
+                </div>
+                
+                <div style="background: #ecf0f1; border-radius: 8px; padding: 1rem;">
+                    <h4>Students (5)</h4>
+                    <div style="margin: 0.5rem 0; padding: 0.5rem; background: white; border-radius: 4px;">
+                        <strong>Sarah J.</strong> <span style="color: #27ae60;">🟢</span>
+                    </div>
+                    <div style="margin: 0.5rem 0; padding: 0.5rem; background: white; border-radius: 4px;">
+                        <strong>Mike C.</strong> <span style="color: #27ae60;">🟢</span>
+                    </div>
+                    <div style="margin: 0.5rem 0; padding: 0.5rem; background: white; border-radius: 4px;">
+                        <strong>Emma L.</strong> <span style="color: #f39c12;">🟡</span>
+                    </div>
+                    <div style="margin: 0.5rem 0; padding: 0.5rem; background: white; border-radius: 4px;">
+                        <strong>Alex R.</strong> <span style="color: #27ae60;">🟢</span>
+                    </div>
+                    <div style="margin: 0.5rem 0; padding: 0.5rem; background: white; border-radius: 4px;">
+                        <strong>Lisa M.</strong> <span style="color: #27ae60;">🟢</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 1rem;">
+                <button class="btn">🎤 Mute</button>
+                <button class="btn">📹 Camera</button>
+                <button class="btn">📱 Share Screen</button>
+                <button class="btn">📝 Whiteboard</button>
+                <button class="btn">📊 Poll</button>
+                <button class="btn btn-danger" onclick="closeModal()">End Session</button>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                <h4>Live Chat</h4>
+                <div style="height: 100px; overflow-y: auto; background: white; padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0;">
+                    <p><strong>Sarah:</strong> Can you explain the chain rule again?</p>
+                    <p><strong>Mike:</strong> Great explanation, thanks!</p>
+                    <p><strong>Emma:</strong> What about the product rule?</p>
+                </div>
+                <input type="text" placeholder="Type your message..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function endSession(sessionId) {
+    if (confirm('Are you sure you want to end this session?')) {
+        alert(`Ending session ${sessionId}... (Feature coming soon!)`);
+    }
+}
+
+function startSession(sessionId) {
+    if (confirm('Start this scheduled session now?')) {
+        joinSession(sessionId);
+    }
+}
+
+function editSession(sessionId) {
+    alert(`Editing session ${sessionId}... (Feature coming soon!)`);
+}
+
+function cancelSession(sessionId) {
+    if (confirm('Are you sure you want to cancel this session?')) {
+        alert(`Canceling session ${sessionId}... (Feature coming soon!)`);
+    }
+}
+
+function createSession() {
+    const title = document.getElementById('sessionTitle').value;
+    const description = document.getElementById('sessionDescription').value;
+    const duration = document.getElementById('sessionDuration').value;
+    const time = document.getElementById('sessionTime').value;
+    
+    if (title && duration) {
+        alert(`Creating session: "${title}" for ${duration} minutes... (Feature coming soon!)`);
+        closeModal();
+    } else {
+        alert('Please fill in all required fields.');
+    }
+}
+
+function closeModal() {
+    const modals = document.querySelectorAll('div[style*="position: fixed"]');
+    modals.forEach(modal => modal.remove());
+    document.getElementById('sessionModal').style.display = 'none';
+}
+</script>
+{% endblock %}

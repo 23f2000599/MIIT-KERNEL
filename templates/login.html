@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Login - AI Learning Companion{% endblock %}
+
+{% block content %}
+<style>
+    .auth-container { max-width: 400px; margin: 2rem auto; }
+    .auth-card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #333; }
+    .form-group input, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #3498db; }
+    .auth-toggle { text-align: center; margin: 1rem 0; }
+    .auth-toggle a { color: #3498db; text-decoration: none; }
+    .divider { text-align: center; margin: 1rem 0; color: #666; }
+</style>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 style="text-align: center; margin-bottom: 2rem; color: #333;">Welcome Back</h2>
+        
+        <form method="POST" action="/login" id="loginForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="role">I am a...</label>
+                <select id="role" name="role" required>
+                    <option value="student">Student</option>
+                    <option value="ta">Teaching Assistant</option>
+                    <option value="admin">Administrator</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">Login</button>
+        </form>
+
+        <div class="auth-toggle">
+            <a href="#" onclick="toggleForm()">Don't have an account? Sign up</a>
+        </div>
+    </div>
+
+    <div class="auth-card" id="signupForm" style="display: none;">
+        <h2 style="text-align: center; margin-bottom: 2rem; color: #333;">Create Account</h2>
+        
+        <form method="POST" action="/signup">
+            <div class="form-group">
+                <label for="signup-name">Full Name</label>
+                <input type="text" id="signup-name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="signup-email">Email Address</label>
+                <input type="email" id="signup-email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="signup-password">Password</label>
+                <input type="password" id="signup-password" name="password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="signup-role">I am a...</label>
+                <select id="signup-role" name="role" required>
+                    <option value="student">Student</option>
+                    <option value="ta">Teaching Assistant</option>
+                    <option value="admin">Administrator</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 1rem;">Create Account</button>
+        </form>
+
+        <div class="auth-toggle">
+            <a href="#" onclick="toggleForm()">Already have an account? Login</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleForm() {
+    const loginForm = document.getElementById('loginForm').parentElement;
+    const signupForm = document.getElementById('signupForm');
+    
+    if (loginForm.style.display === 'none') {
+        loginForm.style.display = 'block';
+        signupForm.style.display = 'none';
+    } else {
+        loginForm.style.display = 'none';
+        signupForm.style.display = 'block';
+    }
+}
+</script>
+{% endblock %}

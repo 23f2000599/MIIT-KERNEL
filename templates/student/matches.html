@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}My Matches{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Your TA Matches 💕</h1>
+    <p>Connect with your matched teaching assistants</p>
+</div>
+
+{% if matches %}
+<div class="grid">
+    {% for match_data in matches %}
+    <div class="card">
+        <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+            <img src="https://thespeechstudiony.com/img/sofia.webp" 
+                 style="border-radius: 50%; margin-right: 1rem; width: 60px; height: 60px; object-fit: cover;" alt="{{ match_data.ta.name }}">
+            <div>
+                <h3>{{ match_data.ta.name }}</h3>
+                <p style="color: #3498db; margin: 0;">Mathematics, Physics</p>
+                <p style="color: #666; margin: 0; font-size: 0.9rem;">⭐ 4.9 rating</p>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="/student/workspace/{{ match_data.ta.id }}" class="btn" style="flex: 1;">Open Workspace</a>
+            <button class="btn" onclick="startChat({{ match_data.ta.id }})" style="flex: 1;">Message</button>
+        </div>
+        
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.9rem; color: #666;">
+            Matched recently
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align: center;">
+    <h3>No matches yet! 😔</h3>
+    <p>Start swiping to find your perfect teaching assistant</p>
+    <a href="/student/swipe" class="btn">Start Swiping</a>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>📊 Match Statistics</h3>
+    <div class="stats">
+        <div class="stat-item">
+            <h3>{{ matches|length }}</h3>
+            <p>Active Matches</p>
+        </div>
+        <div class="stat-item">
+            <h3>85%</h3>
+            <p>Match Success Rate</p>
+        </div>
+        <div class="stat-item">
+            <h3>4.2</h3>
+            <p>Avg TA Rating</p>
+        </div>
+        <div class="stat-item">
+            <h3>12</h3>
+            <p>Study Sessions</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function startChat(taId) {
+    alert(`Starting chat with TA ${taId}... (Chat feature coming soon!)`);
+}
+</script>
+{% endblock %}

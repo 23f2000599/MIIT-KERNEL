@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Set Your Preferences{% endblock %}
+
+{% block content %}
+<style>
+    .preferences-container { max-width: 700px; margin: 2rem auto; }
+    .pref-card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #333; }
+    .checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; }
+    .checkbox-item { display: flex; align-items: center; gap: 0.5rem; }
+    .confidence-slider { width: 100%; margin-top: 0.5rem; }
+    .confidence-label { display: flex; justify-content: space-between; font-size: 0.85rem; color: #666; margin-top: 0.25rem; }
+    textarea { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; min-height: 100px; }
+    select { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+    .subject-confidence { background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+    .confidence-value { font-weight: bold; color: #3498db; }
+</style>
+
+<div class="preferences-container">
+    <div class="pref-card">
+        <h1>🎯 Set Your Learning Preferences</h1>
+        <p style="color: #666; margin-bottom: 2rem;">Help us find the perfect TA match for you!</p>
+
+        <form method="POST" action="/student/preferences">
+            <div class="form-group">
+                <label>📚 Which subjects do you need help with?</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="math" name="subjects" value="Mathematics" onchange="updateConfidenceSection()">
+                        <label for="math" style="font-weight: normal; margin: 0;">Mathematics</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="physics" name="subjects" value="Physics" onchange="updateConfidenceSection()">
+                        <label for="physics" style="font-weight: normal; margin: 0;">Physics</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="chemistry" name="subjects" value="Chemistry" onchange="updateConfidenceSection()">
+                        <label for="chemistry" style="font-weight: normal; margin: 0;">Chemistry</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="biology" name="subjects" value="Biology" onchange="updateConfidenceSection()">
+                        <label for="biology" style="font-weight: normal; margin: 0;">Biology</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cs" name="subjects" value="Computer Science" onchange="updateConfidenceSection()">
+                        <label for="cs" style="font-weight: normal; margin: 0;">Computer Science</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="english" name="subjects" value="English" onchange="updateConfidenceSection()">
+                        <label for="english" style="font-weight: normal; margin: 0;">English</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="history" name="subjects" value="History" onchange="updateConfidenceSection()">
+                        <label for="history" style="font-weight: normal; margin: 0;">History</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="engineering" name="subjects" value="Engineering" onchange="updateConfidenceSection()">
+                        <label for="engineering" style="font-weight: normal; margin: 0;">Engineering</label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="confidenceSection" style="display: none;">
+                <div class="form-group">
+                    <label>📊 Rate your confidence level in each subject</label>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">1 = Need lots of help, 5 = Just need minor guidance</p>
+                    <div id="confidenceSliders"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>⏰ What are your upcoming deadlines?</label>
+                <textarea name="deadlines" placeholder="E.g., Math exam on Dec 15, Physics project due Dec 20, etc."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>🎓 What's your preferred learning style?</label>
+                <select name="learning_style">
+                    <option value="">Select your learning style</option>
+                    <option value="visual">Visual (diagrams, charts, videos)</option>
+                    <option value="auditory">Auditory (lectures, discussions)</option>
+                    <option value="reading">Reading/Writing (notes, articles)</option>
+                    <option value="kinesthetic">Kinesthetic (hands-on, practice)</option>
+                    <option value="mixed">Mixed (combination of styles)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">Save Preferences & Find TAs</button>
+        </form>
+    </div>
+
+    <div class="pref-card" style="background: #e8f4f8; border-left: 4px solid #3498db;">
+        <h3>💡 Why we ask this</h3>
+        <p style="margin: 0; color: #555;">Your preferences help our AI match you with TAs who specialize in your subjects, understand your confidence level, and can help you meet your deadlines. You can update these anytime!</p>
+    </div>
+</div>
+
+<script>
+function updateConfidenceSection() {
+    const checkboxes = document.querySelectorAll('input[name="subjects"]:checked');
+    const confidenceSection = document.getElementById('confidenceSection');
+    const confidenceSliders = document.getElementById('confidenceSliders');
+    
+    if (checkboxes.length > 0) {
+        confidenceSection.style.display = 'block';
+        confidenceSliders.innerHTML = '';
+        
+        checkboxes.forEach(checkbox => {
+            const subject = checkbox.value;
+            const subjectId = checkbox.id;
+            
+            const div = document.createElement('div');
+            div.className = 'subject-confidence';
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong>${subject}</strong>
+                    <span class="confidence-value" id="value_${subjectId}">3</span>
+                </div>
+                <input type="range" 
+                       class="confidence-slider" 
+                       name="confidence_${subject}" 
+                       id="slider_${subjectId}"
+                       min="1" 
+                       max="5" 
+                       value="3"
+                       oninput="document.getElementById('value_${subjectId}').textContent = this.value">
+                <div class="confidence-label">
+                    <span>Need lots of help</span>
+                    <span>Minor guidance</span>
+                </div>
+            `;
+            confidenceSliders.appendChild(div);
+        });
+    } else {
+        confidenceSection.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

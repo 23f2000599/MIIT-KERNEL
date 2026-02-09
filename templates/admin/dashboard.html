@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Platform Administration 🛠️</h1>
+    <p>Monitor and manage the AI Learning Companion platform</p>
+</div>
+
+<div class="card">
+    <h2>Platform Overview</h2>
+    <div class="stats">
+        <div class="stat-item">
+            <h3>{{ admin_stats.total_users }}</h3>
+            <p>Total Users</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ admin_stats.active_sessions }}</h3>
+            <p>Active Sessions</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ admin_stats.study_hours_logged }}h</h3>
+            <p>Study Hours Logged</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ admin_stats.total_matches }}</h3>
+            <p>Total Matches</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>👥 User Management</h3>
+        <p>Manage users, roles, and permissions</p>
+        <a href="/admin/users" class="btn">Manage Users</a>
+        <div style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+            <p>Students: 18 | TAs: 5 | Admins: 2</p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>📊 Analytics & Reports</h3>
+        <p>View detailed platform analytics</p>
+        <a href="/admin/analytics" class="btn">View Analytics</a>
+        <div style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+            <p>Daily active users: 15</p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>💕 Match Oversight</h3>
+        <p>Monitor matching system performance</p>
+        <a href="/admin/matches" class="btn">View Matches</a>
+        <div style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+            <p>Success rate: 78%</p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>📝 Content Moderation</h3>
+        <p>Review and moderate user content</p>
+        <a href="/admin/content" class="btn">Moderate Content</a>
+        <div style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+            <p>Pending reviews: 3</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📈 Real-time Activity</h3>
+    <div style="height: 300px; background: #f8f9fa; border-radius: 8px; display: flex; align-items: end; justify-content: space-around; padding: 2rem;">
+        <div style="background: #3498db; width: 30px; height: 40%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">00:00</span>
+        </div>
+        <div style="background: #3498db; width: 30px; height: 60%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">04:00</span>
+        </div>
+        <div style="background: #3498db; width: 30px; height: 80%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">08:00</span>
+        </div>
+        <div style="background: #3498db; width: 30px; height: 90%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">12:00</span>
+        </div>
+        <div style="background: #3498db; width: 30px; height: 70%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">16:00</span>
+        </div>
+        <div style="background: #3498db; width: 30px; height: 50%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">20:00</span>
+        </div>
+    </div>
+    <p style="text-align: center; margin-top: 1rem; color: #666;">Active users throughout the day</p>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>🚨 System Alerts</h3>
+        <div style="max-height: 200px; overflow-y: auto;">
+            <div style="padding: 0.75rem; border-bottom: 1px solid #eee; background: #fff3cd;">
+                <p style="margin: 0; font-weight: bold; color: #856404;">High server load detected</p>
+                <p style="margin: 0; font-size: 0.8rem; color: #666;">2 minutes ago</p>
+            </div>
+            
+            <div style="padding: 0.75rem; border-bottom: 1px solid #eee;">
+                <p style="margin: 0;">New user registration spike</p>
+                <p style="margin: 0; font-size: 0.8rem; color: #666;">15 minutes ago</p>
+            </div>
+            
+            <div style="padding: 0.75rem; border-bottom: 1px solid #eee;">
+                <p style="margin: 0;">Database backup completed</p>
+                <p style="margin: 0; font-size: 0.8rem; color: #666;">1 hour ago</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>⚙️ Quick Actions</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <button class="btn" onclick="sendAnnouncement()">📢 Send Announcement</button>
+            <button class="btn" onclick="backupDatabase()">💾 Backup Database</button>
+            <button class="btn" onclick="viewLogs()">📋 View System Logs</button>
+            <button class="btn btn-danger" onclick="emergencyMode()">🚨 Emergency Mode</button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📊 Platform Health</h3>
+    <div class="grid">
+        <div style="text-align: center; padding: 1rem; background: #e8f5e8; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem; color: #27ae60;">✅</div>
+            <h4>Server Status</h4>
+            <p style="color: #27ae60;">Operational</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #e8f5e8; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem; color: #27ae60;">✅</div>
+            <h4>Database</h4>
+            <p style="color: #27ae60;">Healthy</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #fff3cd; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem; color: #f39c12;">⚠️</div>
+            <h4>API Response</h4>
+            <p style="color: #f39c12;">Slow (850ms)</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #e8f5e8; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem; color: #27ae60;">✅</div>
+            <h4>Storage</h4>
+            <p style="color: #27ae60;">65% Used</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🔧 System Configuration</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div>
+            <h4>Default Settings</h4>
+            <p><strong>Max Timer Duration:</strong> 180 minutes</p>
+            <p><strong>Match Limit per Student:</strong> 10</p>
+            <p><strong>Session Timeout:</strong> 30 minutes</p>
+        </div>
+        
+        <div>
+            <h4>Feature Toggles</h4>
+            <label style="display: block; margin: 0.5rem 0;">
+                <input type="checkbox" checked> New User Registration
+            </label>
+            <label style="display: block; margin: 0.5rem 0;">
+                <input type="checkbox" checked> TA Matching System
+            </label>
+            <label style="display: block; margin: 0.5rem 0;">
+                <input type="checkbox"> Beta Features
+            </label>
+        </div>
+        
+        <div>
+            <h4>Content Policies</h4>
+            <p><strong>Auto-moderation:</strong> Enabled</p>
+            <p><strong>Note approval:</strong> Required for new TAs</p>
+            <p><strong>Report threshold:</strong> 3 reports</p>
+        </div>
+    </div>
+    
+    <button class="btn" onclick="updateConfig()" style="margin-top: 1rem;">Update Configuration</button>
+</div>
+
+<script>
+function sendAnnouncement() {
+    const message = prompt('Enter announcement message:');
+    if (message) {
+        alert(`Sending announcement: "${message}" to all users... (Feature coming soon!)`);
+    }
+}
+
+function backupDatabase() {
+    if (confirm('Start database backup now? This may take a few minutes.')) {
+        alert('Database backup started... (Feature coming soon!)');
+    }
+}
+
+function viewLogs() {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
+        align-items: center; z-index: 1000;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 10px; max-width: 800px; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3>System Logs</h3>
+                <button onclick="closeModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✕</button>
+            </div>
+            
+            <div style="background: #2c3e50; color: #00ff00; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem; height: 400px; overflow-y: auto;">
+                <div>[2024-03-15 14:30:15] INFO: User login successful - user_id: 123</div>
+                <div>[2024-03-15 14:29:45] INFO: Timer session started - session_id: 456</div>
+                <div>[2024-03-15 14:28:30] WARN: High memory usage detected - 85%</div>
+                <div>[2024-03-15 14:27:12] INFO: New match created - student: 789, ta: 101</div>
+                <div>[2024-03-15 14:26:55] INFO: Database query executed - 0.45s</div>
+                <div>[2024-03-15 14:25:33] ERROR: Failed to send notification - retry scheduled</div>
+                <div>[2024-03-15 14:24:18] INFO: Live session ended - duration: 45min</div>
+                <div>[2024-03-15 14:23:02] INFO: Note uploaded - note_id: 234</div>
+                <div>[2024-03-15 14:22:44] INFO: User registration - new student</div>
+                <div>[2024-03-15 14:21:15] INFO: System health check - all services operational</div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button class="btn">Download Logs</button>
+                <button class="btn">Clear Logs</button>
+                <button class="btn" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function emergencyMode() {
+    if (confirm('Enable emergency mode? This will restrict platform access to admins only.')) {
+        alert('Emergency mode activated! (Feature coming soon!)');
+    }
+}
+
+function updateConfig() {
+    alert('Configuration updated successfully! (Feature coming soon!)');
+}
+
+function closeModal() {
+    const modal = document.querySelector('div[style*="position: fixed"]');
+    if (modal) modal.remove();
+}
+
+// Auto-refresh stats every 30 seconds
+setInterval(() => {
+    // In a real app, this would fetch updated stats
+    console.log('Refreshing admin stats...');
+}, 30000);
+</script>
+{% endblock %}

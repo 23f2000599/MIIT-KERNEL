@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">StudyFocus</h1>
+        <p class="hero-subtitle">Transform your study habits with AI-powered focus tools and expert TA guidance</p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Get Started</a>
+            <a href="#features" class="btn btn-outline-light btn-lg">Learn More</a>
+        </div>
+    </div>
+    <div class="hero-stats">
+        <div class="stat-item">
+            <h3>10K+</h3>
+            <p>Active Students</p>
+        </div>
+        <div class="stat-item">
+            <h3>500+</h3>
+            <p>Expert TAs</p>
+        </div>
+        <div class="stat-item">
+            <h3>1M+</h3>
+            <p>Study Hours</p>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Powerful Features for Academic Success</h2>
+            <p>Everything you need to maximize your learning potential</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="feature-card">
+                    <div class="feature-icon">⏰</div>
+                    <h5>Smart Timers</h5>
+                    <p>Pomodoro, Deep Focus, and custom timers with AI-powered break suggestions</p>
+                    <ul class="feature-list">
+                        <li>10+ Timer Types</li>
+                        <li>Focus Analytics</li>
+                        <li>Break Reminders</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h5>Focus Control</h5>
+                    <p>Block distractions and create the perfect study environment</p>
+                    <ul class="feature-list">
+                        <li>Website Blocking</li>
+                        <li>Ambient Sounds</li>
+                        <li>Focus Lock Mode</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="feature-card">
+                    <div class="feature-icon">👨‍🏫</div>
+                    <h5>TA Matching</h5>
+                    <p>Connect with qualified teaching assistants for personalized help</p>
+                    <ul class="feature-list">
+                        <li>Smart Matching</li>
+                        <li>Expert Reviews</li>
+                        <li>Live Sessions</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h5>Live Learning</h5>
+                    <p>Access shared notes, materials, and live study sessions</p>
+                    <ul class="feature-list">
+                        <li>Shared Notes</li>
+                        <li>Exam Prep</li>
+                        <li>Progress Tracking</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works">
+    <div class="container">
+        <div class="section-header">
+            <h2>How StudyFocus Works</h2>
+            <p>Get started in 3 simple steps</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 text-center">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h4>Sign Up & Choose Role</h4>
+                    <p>Create your account as a Student, TA, or Admin</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h4>Set Your Goals</h4>
+                    <p>Configure your study preferences and find your perfect TA</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h4>Start Learning</h4>
+                    <p>Use timers, join sessions, and track your progress</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container text-center">
+        <h2>Ready to Transform Your Study Habits?</h2>
+        <p>Join thousands of students already improving their academic performance</p>
+        <div class="cta-buttons">
+            <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg">Start Free Trial</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">Login</a>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <h5>StudyFocus</h5>
+                <p>Empowering students with smart study tools and expert guidance.</p>
+            </div>
+            <div class="col-md-4">
+                <h6>Features</h6>
+                <ul class="footer-links">
+                    <li><a href="#">Study Timers</a></li>
+                    <li><a href="#">TA Matching</a></li>
+                    <li><a href="#">Focus Tools</a></li>
+                    <li><a href="#">Analytics</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6>Support</h6>
+                <ul class="footer-links">
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        <hr>
+        <div class="text-center">
+            <p>&copy; 2024 StudyFocus. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+{% endblock %}

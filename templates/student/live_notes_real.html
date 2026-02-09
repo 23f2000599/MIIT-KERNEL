@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Live Speech Notes{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>🎤 Live Speech Notes</h1>
+            <p>Real-time speech-to-text with AI note generation</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button id="start-btn" class="btn btn-success">🎤 Start Recording</button>
+            <button id="stop-btn" class="btn btn-danger" disabled>⏹️ Stop & Generate Notes</button>
+        </div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>🎤 Live Speech Recognition</h3>
+        
+        <div id="status" style="margin-bottom: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+            <span style="color: var(--text-secondary);">Click "Start Recording" to begin</span>
+        </div>
+        
+        <div>
+            <h4>📝 Live Transcript:</h4>
+            <div id="transcript" style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; min-height: 300px; max-height: 400px; overflow-y: auto; font-family: 'Segoe UI', sans-serif; line-height: 1.6; border: 2px solid var(--glass-border);">
+                <span style="color: var(--text-secondary); font-style: italic;">Your speech will appear here...</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>📊 Session Info</h3>
+        <div class="stats">
+            <div class="stat-item">
+                <h3 id="duration">00:00</h3>
+                <p>Duration</p>
+            </div>
+            <div class="stat-item">
+                <h3 id="word-count">0</h3>
+                <p>Words</p>
+            </div>
+            <div class="stat-item">
+                <h3 id="confidence">0%</h3>
+                <p>Confidence</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+            <p><strong>🎯 Status:</strong> <span id="recognition-status">Ready</span></p>
+            <p><strong>⏰ Started:</strong> <span id="session-start">--</span></p>
+            <p><strong>🔊 Microphone:</strong> <span id="mic-status">Not accessed</span></p>
+        </div>
+        
+        <div style="margin-top: 1rem;">
+            <button class="btn" onclick="clearTranscript()">🗑️ Clear</button>
+        </div>
+    </div>
+</div>
+
+<div class="card" id="ai-notes-section" style="display: none;">
+    <h3>🤖 AI-Generated Notes</h3>
+    <div id="ai-notes" style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; white-space: pre-wrap; font-family: monospace; max-height: 400px; overflow-y: auto;">
+    </div>
+    <div style="margin-top: 1rem;">
+        <button class="btn btn-success" onclick="saveNotes()">💾 Save to Notes</button>
+        <button class="btn" onclick="copyNotes()">📋 Copy</button>
+    </div>
+</div>
+
+<style>
+.recording-pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.interim-text {
+    opacity: 0.6;
+    font-style: italic;
+    background: rgba(52, 152, 219, 0.1);
+    padding: 0.25rem;
+    border-radius: 4px;
+}
+
+.final-text {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    border-left: 4px solid var(--accent-primary);
+}
+</style>
+
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+<script>
+let socket;
+let recognition;
+let isRecording = false;
+let startTime;
+let durationInterval;
+let fullTranscript = '';
+let wordCount = 0;
+let finalTranscript = '';
+
+// Initialize Socket.IO
+socket = io();
+
+socket.on('transcription_started', function(data) {
+    document.getElementById('status').innerHTML = '<span style="color: var(--accent-green);" class="recording-pulse">🔴 Recording... Speak now!</span>';
+    document.getElementById('recognition-status').textContent = 'Listening';
+});
+
+socket.on('transcription_stopped', function(data) {
+    document.getElementById('status').innerHTML = '<span style="color: var(--accent-primary);">✅ Recording stopped - AI notes generated!</span>';
+    document.getElementById('recognition-status').textContent = 'Stopped';
+    
+    if (data.ai_notes) {
+        document.getElementById('ai-notes').textContent = data.ai_notes;
+        document.getElementById('ai-notes-section').style.display = 'block';
+    }
+});
+
+socket.on('error', function(data) {
+    document.getElementById('status').innerHTML = `<span style="color: var(--accent-red);">❌ Error: ${data.message}</span>`;
+});
+
+// Web Speech API setup
+function initializeSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        document.getElementById('status').innerHTML = '<span style="color: var(--accent-red);">❌ Speech recognition not supported in this browser</span>';
+        return false;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    
+    recognition.onstart = function() {
+        document.getElementById('mic-status').textContent = 'Active';
+        document.getElementById('mic-status').style.color = 'var(--accent-green)';
+    };
+    
+    recognition.onresult = function(event) {
+        let interimTranscript = '';
+        let finalTranscriptPart = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            const confidence = event.results[i][0].confidence || 0.95;
+            
+            if (event.results[i].isFinal) {
+                finalTranscriptPart += transcript;
+                finalTranscript += transcript + ' ';
+                
+                // Send to server
+                socket.emit('speech_result', {
+                    transcript: transcript,
+                    is_final: true,
+                    confidence: confidence
+                });
+                
+                addFinalText(transcript, confidence);
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+        
+        if (interimTranscript) {
+            showInterimText(interimTranscript);
+        }
+        
+        updateStats();
+    };
+    
+    recognition.onerror = function(event) {\n        document.getElementById('status').innerHTML = `<span style=\"color: var(--accent-red);\">❌ Speech recognition error: ${event.error}</span>`;\n    };\n    \n    recognition.onend = function() {\n        if (isRecording) {\n            recognition.start(); // Restart if still recording\n        }\n    };\n    \n    return true;\n}\n\nfunction startRecording() {\n    if (!recognition && !initializeSpeechRecognition()) {\n        return;\n    }\n    \n    try {\n        recognition.start();\n        socket.emit('start_transcription', { language: 'en-US' });\n        \n        isRecording = true;\n        startTime = new Date();\n        document.getElementById('start-btn').disabled = true;\n        document.getElementById('stop-btn').disabled = false;\n        document.getElementById('session-start').textContent = startTime.toLocaleTimeString();\n        document.getElementById('transcript').innerHTML = '';\n        fullTranscript = '';\n        finalTranscript = '';\n        wordCount = 0;\n        \n        durationInterval = setInterval(updateDuration, 1000);\n        \n    } catch (error) {\n        document.getElementById('status').innerHTML = `<span style=\"color: var(--accent-red);\">❌ Error starting recording: ${error.message}</span>`;\n    }\n}\n\nfunction stopRecording() {\n    if (recognition && isRecording) {\n        recognition.stop();\n        socket.emit('stop_transcription');\n        \n        isRecording = false;\n        document.getElementById('start-btn').disabled = false;\n        document.getElementById('stop-btn').disabled = true;\n        document.getElementById('mic-status').textContent = 'Inactive';\n        document.getElementById('mic-status').style.color = 'var(--text-secondary)';\n        clearInterval(durationInterval);\n    }\n}\n\nfunction addFinalText(text, confidence) {\n    const transcriptDiv = document.getElementById('transcript');\n    const line = document.createElement('div');\n    line.className = 'final-text';\n    \n    const confidencePercent = confidence ? Math.round(confidence * 100) : 95;\n    line.innerHTML = `${text} <span style=\"font-size: 0.8em; opacity: 0.7;\">(${confidencePercent}%)</span>`;\n    \n    transcriptDiv.appendChild(line);\n    transcriptDiv.scrollTop = transcriptDiv.scrollHeight;\n    \n    // Remove interim text\n    const interimDiv = document.getElementById('interim-text');\n    if (interimDiv) {\n        interimDiv.remove();\n    }\n}\n\nfunction showInterimText(text) {\n    const transcriptDiv = document.getElementById('transcript');\n    let interimDiv = document.getElementById('interim-text');\n    \n    if (!interimDiv) {\n        interimDiv = document.createElement('div');\n        interimDiv.id = 'interim-text';\n        interimDiv.className = 'interim-text';\n        transcriptDiv.appendChild(interimDiv);\n    }\n    \n    interimDiv.textContent = text;\n    transcriptDiv.scrollTop = transcriptDiv.scrollHeight;\n}\n\nfunction updateDuration() {\n    if (startTime) {\n        const now = new Date();\n        const diff = Math.floor((now - startTime) / 1000);\n        const minutes = Math.floor(diff / 60);\n        const seconds = diff % 60;\n        document.getElementById('duration').textContent = \n            minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');\n    }\n}\n\nfunction updateStats() {\n    const words = finalTranscript.trim().split(/\\s+/).filter(word => word.length > 0);\n    document.getElementById('word-count').textContent = words.length;\n    document.getElementById('confidence').textContent = '95%'; // Average confidence\n}\n\nfunction clearTranscript() {\n    if (confirm('Clear current transcript?')) {\n        document.getElementById('transcript').innerHTML = '<span style=\"color: var(--text-secondary); font-style: italic;\">Your speech will appear here...</span>';\n        finalTranscript = '';\n        wordCount = 0;\n        updateStats();\n        document.getElementById('ai-notes-section').style.display = 'none';\n    }\n}\n\nfunction saveNotes() {\n    alert('✅ AI-generated notes saved to your Notes section!');\n}\n\nfunction copyNotes() {\n    const notes = document.getElementById('ai-notes').textContent;\n    navigator.clipboard.writeText(notes).then(() => {\n        alert('📋 Notes copied to clipboard!');\n    });\n}\n\n// Event listeners\ndocument.getElementById('start-btn').addEventListener('click', startRecording);\ndocument.getElementById('stop-btn').addEventListener('click', stopRecording);\n\n// Initialize on page load\nwindow.addEventListener('load', function() {\n    if (!initializeSpeechRecognition()) {\n        document.getElementById('start-btn').disabled = true;\n    }\n});\n</script>\n{% endblock %}

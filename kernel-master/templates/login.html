@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 4L13.5 7H10.5L9 4L3 7V9H21ZM21 10H3V22H21V10Z" fill="currentColor"/>
+                </svg>
+            </div>
+            <h2>Welcome Back</h2>
+            <p>Sign in to your StudyFocus account</p>
+        </div>
+        
+        <form method="POST" class="login-form">
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <path d="M22 6L12 13L2 6" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                    Email Address
+                </label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                        <path d="M7 11V7A5 5 0 0 1 17 7V11" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                    Password
+                </label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-login">
+                <span>Sign In</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </button>
+        </form>
+        
+        <div class="divider">
+            <span>or try demo accounts</span>
+        </div>
+        
+        <div class="demo-section">
+            <h6>🚀 Quick Demo Access</h6>
+            <div class="demo-grid">
+                <form method="POST" class="demo-form">
+                    <input type="hidden" name="email" value="student@demo.com">
+                    <input type="hidden" name="password" value="demo123">
+                    <button type="submit" class="btn btn-demo btn-student">
+                        <div class="demo-icon">🎓</div>
+                        <div class="demo-content">
+                            <strong>Student Demo</strong>
+                            <small>student@demo.com</small>
+                        </div>
+                    </button>
+                </form>
+                
+                <form method="POST" class="demo-form">
+                    <input type="hidden" name="email" value="ta@demo.com">
+                    <input type="hidden" name="password" value="demo123">
+                    <button type="submit" class="btn btn-demo btn-ta">
+                        <div class="demo-icon">👨‍🏫</div>
+                        <div class="demo-content">
+                            <strong>TA Demo</strong>
+                            <small>ta@demo.com</small>
+                        </div>
+                    </button>
+                </form>
+                
+                <form method="POST" class="demo-form">
+                    <input type="hidden" name="email" value="admin@demo.com">
+                    <input type="hidden" name="password" value="demo123">
+                    <button type="submit" class="btn btn-demo btn-admin">
+                        <div class="demo-icon">⚙️</div>
+                        <div class="demo-content">
+                            <strong>Admin Demo</strong>
+                            <small>admin@demo.com</small>
+                        </div>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="login-footer">
+            <p>Don't have an account? <a href="{{ url_for('signup') }}" class="signup-link">Create one here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add floating animation to login card
+document.addEventListener('DOMContentLoaded', function() {
+    const card = document.querySelector('.login-card');
+    card.style.animation = 'fadeInUp 0.8s ease-out';
+    
+    // Add ripple effect to buttons
+    document.querySelectorAll('.btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+});
+</script>
+{% endblock %}

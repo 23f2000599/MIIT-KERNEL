@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Study Timers{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Choose Your Study Timer 🎯</h1>
+    <p>Select the perfect timer for your study session</p>
+</div>
+
+<div class="grid">
+    {% for timer in timer_types %}
+    <div class="card">
+        <h3>
+            {% if timer == "Pomodoro Timer" %}⏰
+            {% elif timer == "Deep Focus Timer" %}🧠
+            {% elif timer == "52-17 Timer" %}📊
+            {% elif timer == "Timeboxing Timer" %}📦
+            {% elif timer == "Flowtime Timer" %}🌊
+            {% elif timer == "Exam Countdown Timer" %}📅
+            {% elif timer == "Group Study Sync Timer" %}👥
+            {% elif timer == "Night Study Timer" %}🌙
+            {% elif timer == "Micro-Session Timer" %}⚡
+            {% else %}🎛️
+            {% endif %}
+            {{ timer }}
+        </h3>
+        
+        <p>
+            {% if timer == "Pomodoro Timer" %}25 min focus + 5 min break cycles
+            {% elif timer == "Deep Focus Timer" %}Extended focus sessions (90-120 min)
+            {% elif timer == "52-17 Timer" %}52 min work + 17 min break
+            {% elif timer == "Timeboxing Timer" %}Allocate specific time blocks
+            {% elif timer == "Flowtime Timer" %}Natural break timing
+            {% elif timer == "Exam Countdown Timer" %}Count down to exam date
+            {% elif timer == "Group Study Sync Timer" %}Synchronized group sessions
+            {% elif timer == "Night Study Timer" %}Optimized for evening study
+            {% elif timer == "Micro-Session Timer" %}Quick 5-15 minute sessions
+            {% else %}Fully customizable timer settings
+            {% endif %}
+        </p>
+        
+        <a href="/student/timer/{{ timer.replace(' ', '_').lower() }}" class="btn">Start Timer</a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card">
+    <h3>🎵 Focus Enhancement</h3>
+    <p>Available during your timer sessions:</p>
+    <ul style="margin: 1rem 0; padding-left: 2rem;">
+        <li>Spotify focus playlists</li>
+        <li>Ambient sounds (rain, forest, cafe, white noise)</li>
+        <li>Website blocking and distraction control</li>
+        <li>Focus lock mode</li>
+    </ul>
+</div>
+{% endblock %}

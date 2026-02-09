@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Live Speech Notes{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>🎤 Live Speech Notes</h1>
+    <p>Real-time speech-to-text with AI note generation</p>
+    
+    <div style="margin: 1rem 0;">
+        <button id="start-btn" class="btn btn-success">🎤 Start Recording</button>
+        <button id="stop-btn" class="btn btn-danger" disabled>⏹️ Stop & Generate Notes</button>
+    </div>
+    
+    <div id="status" style="padding: 1rem; background: var(--bg-secondary); border-radius: 8px; margin: 1rem 0;">
+        Click "Start Recording" to begin
+    </div>
+</div>
+
+<div class="card">
+    <h3>📝 Live Transcript</h3>
+    <div id="transcript" style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; min-height: 200px; max-height: 400px; overflow-y: auto;">
+        Your speech will appear here...
+    </div>
+</div>
+
+<div class="card" id="ai-notes-section" style="display: none;">
+    <h3>🤖 AI-Generated Notes</h3>
+    <div id="ai-notes" style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; white-space: pre-wrap; max-height: 400px; overflow-y: auto;">
+    </div>
+    <button class="btn btn-success" onclick="saveNotes()" style="margin-top: 1rem;">💾 Save to Notes</button>
+</div>
+
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+<script>
+let socket = io();
+let recognition;
+let isRecording = false;
+let finalTranscript = '';
+
+socket.on('transcription_stopped', function(data) {
+    document.getElementById('status').innerHTML = '✅ Recording stopped - AI notes generated!';
+    if (data.ai_notes) {
+        document.getElementById('ai-notes').textContent = data.ai_notes;
+        document.getElementById('ai-notes-section').style.display = 'block';
+    }
+});
+
+document.getElementById('start-btn').onclick = function() {
+    if (!('webkitSpeechRecognition' in window)) {
+        document.getElementById('status').innerHTML = '❌ Speech recognition not supported in this browser';
+        return;
+    }
+    
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    
+    recognition.onstart = function() {
+        document.getElementById('status').innerHTML = '🔴 Recording... Speak now!';
+        document.getElementById('start-btn').disabled = true;
+        document.getElementById('stop-btn').disabled = false;
+        isRecording = true;
+        socket.emit('start_transcription', { language: 'en-US' });
+    };
+    
+    recognition.onresult = function(event) {
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript + ' ';
+                document.getElementById('transcript').innerHTML += '<div style="margin-bottom: 0.5rem; padding: 0.5rem; background: var(--bg-primary); border-radius: 6px;">' + transcript + '</div>';
+                socket.emit('speech_result', {
+                    transcript: transcript,
+                    is_final: true
+                });
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+        
+        if (interimTranscript) {
+            let interimDiv = document.getElementById('interim-text');
+            if (!interimDiv) {
+                interimDiv = document.createElement('div');
+                interimDiv.id = 'interim-text';
+                interimDiv.style.opacity = '0.6';
+                interimDiv.style.fontStyle = 'italic';
+                document.getElementById('transcript').appendChild(interimDiv);
+            }
+            interimDiv.textContent = interimTranscript;
+        }
+        
+        document.getElementById('transcript').scrollTop = document.getElementById('transcript').scrollHeight;
+    };
+    
+    recognition.onerror = function(event) {
+        document.getElementById('status').innerHTML = '❌ Error: ' + event.error;
+    };
+    
+    recognition.onend = function() {
+        if (isRecording) {
+            recognition.start();
+        }
+    };
+    
+    recognition.start();
+};
+
+document.getElementById('stop-btn').onclick = function() {
+    if (recognition) {
+        isRecording = false;
+        recognition.stop();
+        socket.emit('stop_transcription');
+        document.getElementById('start-btn').disabled = false;
+        document.getElementById('stop-btn').disabled = true;
+        
+        let interimDiv = document.getElementById('interim-text');
+        if (interimDiv) {
+            interimDiv.remove();
+        }
+    }
+};
+
+function saveNotes() {
+    const notes = document.getElementById('ai-notes').textContent;
+    if (notes) {
+        fetch('/api/save-live-notes', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({notes: notes})
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ AI-generated notes saved to your Notes section!');
+                window.location.href = '/student/notes';
+            } else {
+                alert('❌ Error saving notes');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

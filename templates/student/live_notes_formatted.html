@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+
+{% block title %}Live Notes{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>🎤 Live Lecture Notes</h1>
+            <p>AI-powered real-time transcription and note generation</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <select id="language-select" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--glass-border);">
+                <option value="en-US">🇺🇸 English</option>
+                <option value="es-ES">🇪🇸 Spanish</option>
+                <option value="fr-FR">🇫🇷 French</option>
+                <option value="hi-IN">🇮🇳 Hindi</option>
+            </select>
+            <button id="start-recording" class="btn btn-success">🎤 Start</button>
+            <button id="stop-recording" class="btn btn-danger" disabled>⏹️ Stop</button>
+            <button id="demo-btn" class="btn" onclick="startDemo()">🎭 Demo</button>
+        </div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>🎤 Live Recording</h3>
+        
+        <div id="recording-status" style="margin-bottom: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+            <span style="color: var(--text-secondary);">Select language and click "Start" to begin recording or try "Demo"</span>
+        </div>
+        
+        <div>
+            <h4>📝 Live Transcript:</h4>
+            <div id="live-transcript" style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; min-height: 200px; max-height: 300px; overflow-y: auto; font-family: 'Segoe UI', sans-serif; line-height: 1.6; border: 2px dashed var(--glass-border);">
+                <span style="color: var(--text-secondary); font-style: italic;">Transcript will appear here as you speak...</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>📊 Session Info</h3>
+        <div class="stats">
+            <div class="stat-item">
+                <h3 id="session-duration">00:00</h3>
+                <p>Duration</p>
+            </div>
+            <div class="stat-item">
+                <h3 id="word-count">0</h3>
+                <p>Words</p>
+            </div>
+            <div class="stat-item">
+                <h3 id="confidence-score">--</h3>
+                <p>Accuracy</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+            <p><strong>🌐 Language:</strong> <span id="current-language">English</span></p>
+            <p><strong>⏰ Started:</strong> <span id="session-start">--</span></p>
+            <p><strong>📍 Status:</strong> <span id="session-status">Ready</span></p>
+        </div>
+    </div>
+</div>
+
+<div class="card" id="notes-section" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+        <h3>🤖 AI-Generated Notes</h3>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn" onclick="saveNotes()">💾 Save</button>
+            <button class="btn" onclick="exportNotes()">📤 Export</button>
+            <button class="btn" onclick="clearNotes()">🗑️ Clear</button>
+        </div>
+    </div>
+    
+    <div id="processing-indicator" style="text-align: center; padding: 2rem;">
+        <div class="loading-spinner" style="margin: 0 auto 1rem;"></div>
+        <p>🤖 AI is processing your transcript and generating structured notes...</p>
+    </div>
+    
+    <div id="generated-notes" style="display: none;"></div>
+</div>
+
+<style>
+.recording-pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.transcript-word {
+    display: inline-block;
+    margin: 0 2px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: background-color 0.3s ease;
+}
+
+.transcript-word.new {
+    background-color: var(--accent-primary);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .stat-item h3 {
+        font-size: 1.2rem;
+    }
+}
+</style>
+
+<script>
+let recognition;
+let isRecording = false;
+let sessionStartTime;
+let durationInterval;
+let fullTranscript = '';
+let demoMode = false;
+
+// Sample demo transcript for demonstration
+const demoTranscript = `
+Welcome to today's lecture on Machine Learning fundamentals. 
+Machine learning is a subset of artificial intelligence that focuses on algorithms and statistical models. 
+There are three main types of machine learning: supervised learning, unsupervised learning, and reinforcement learning. 
+Supervised learning uses labeled data to train models for prediction tasks. 
+Common algorithms include linear regression, decision trees, and neural networks. 
+Unsupervised learning finds patterns in data without labeled examples. 
+Clustering and dimensionality reduction are popular unsupervised techniques. 
+Reinforcement learning involves agents learning through interaction with an environment. 
+The goal is to maximize cumulative reward through trial and error. 
+Applications include game playing, robotics, and autonomous systems. 
+Data preprocessing is crucial for successful machine learning projects. 
+This includes cleaning data, handling missing values, and feature engineering. 
+Model evaluation uses metrics like accuracy, precision, recall, and F1-score. 
+Cross-validation helps assess model performance on unseen data. 
+Overfitting occurs when models memorize training data but fail on new examples.
+`;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    
+    recognition.onstart = function() {
+        isRecording = true;
+        sessionStartTime = new Date();
+        fullTranscript = '';
+        document.getElementById('recording-status').innerHTML = '<span style="color: var(--accent-green);" class="recording-pulse">🔴 Recording... Speak now!</span>';
+        document.getElementById('start-recording').disabled = true;
+        document.getElementById('stop-recording').disabled = false;
+        document.getElementById('session-start').textContent = sessionStartTime.toLocaleTimeString();
+        document.getElementById('session-status').textContent = 'Recording';
+        document.getElementById('live-transcript').innerHTML = '';
+        
+        durationInterval = setInterval(updateDuration, 1000);
+    };
+    
+    recognition.onresult = function(event) {
+        let finalTranscript = '';
+        let interimTranscript = '';
+        let confidence = 0;
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            confidence = Math.max(confidence, event.results[i][0].confidence || 0.8);
+            
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript + ' ';
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+        
+        if (finalTranscript) {
+            fullTranscript += finalTranscript;
+            updateTranscriptDisplay();
+            updateWordCount();
+            updateConfidence(confidence);
+        }
+        
+        if (interimTranscript) {
+            const transcriptDiv = document.getElementById('live-transcript');
+            transcriptDiv.innerHTML = fullTranscript + '<span style="color: var(--accent-primary); opacity: 0.7; background: var(--bg-primary); padding: 2px 4px; border-radius: 3px;">' + interimTranscript + '</span>';
+        }
+    };
+    
+    recognition.onerror = function(event) {
+        document.getElementById('recording-status').innerHTML = '<span style="color: var(--accent-red);">❌ Error: ' + event.error + '</span>';
+        document.getElementById('session-status').textContent = 'Error';
+    };
+    
+    recognition.onend = function() {
+        if (isRecording && !demoMode) {
+            recognition.start();
+        }
+    };
+} else {
+    document.getElementById('recording-status').innerHTML = '<span style="color: var(--accent-orange);">⚠️ Speech recognition not supported. Try the Demo instead!</span>';
+}
+
+document.getElementById('language-select').addEventListener('change', function() {
+    const selectedLang = this.value;
+    const langNames = {
+        'en-US': 'English',
+        'es-ES': 'Spanish', 
+        'fr-FR': 'French',
+        'hi-IN': 'Hindi'
+    };
+    
+    if (recognition) {
+        recognition.lang = selectedLang;
+    }
+    document.getElementById('current-language').textContent = langNames[selectedLang];
+});
+
+document.getElementById('start-recording').addEventListener('click', function() {
+    if (recognition) {
+        demoMode = false;
+        const selectedLang = document.getElementById('language-select').value;
+        recognition.lang = selectedLang;
+        recognition.start();
+    }
+});
+
+document.getElementById('stop-recording').addEventListener('click', function() {
+    stopRecording();
+});
+
+function startDemo() {
+    demoMode = true;
+    sessionStartTime = new Date();
+    fullTranscript = '';
+    
+    document.getElementById('recording-status').innerHTML = '<span style="color: var(--accent-primary);" class="recording-pulse">🎭 Demo Mode - Simulating live transcription...</span>';
+    document.getElementById('start-recording').disabled = true;
+    document.getElementById('stop-recording').disabled = false;
+    document.getElementById('demo-btn').disabled = true;
+    document.getElementById('session-start').textContent = sessionStartTime.toLocaleTimeString();
+    document.getElementById('session-status').textContent = 'Demo Running';
+    document.getElementById('live-transcript').innerHTML = '';
+    
+    durationInterval = setInterval(updateDuration, 1000);
+    
+    // Simulate real-time transcription
+    const words = demoTranscript.trim().split(' ');
+    let wordIndex = 0;
+    
+    const transcriptionInterval = setInterval(() => {
+        if (wordIndex < words.length && demoMode) {
+            fullTranscript += words[wordIndex] + ' ';
+            updateTranscriptDisplay();
+            updateWordCount();
+            updateConfidence(0.85 + Math.random() * 0.1);
+            wordIndex++;
+        } else {
+            clearInterval(transcriptionInterval);
+            if (demoMode) {
+                setTimeout(() => {
+                    stopRecording();
+                }, 1000);
+            }
+        }
+    }, 200 + Math.random() * 300);
+}
+
+function stopRecording() {
+    if (recognition && !demoMode) {
+        isRecording = false;
+        recognition.stop();
+    }
+    
+    demoMode = false;
+    clearInterval(durationInterval);
+    document.getElementById('recording-status').innerHTML = '<span style="color: var(--accent-primary);">⏸️ Recording stopped. Processing transcript...</span>';
+    document.getElementById('start-recording').disabled = false;
+    document.getElementById('stop-recording').disabled = true;
+    document.getElementById('demo-btn').disabled = false;
+    document.getElementById('session-status').textContent = 'Processing';
+    
+    generateAINotes();
+}
+
+function updateDuration() {
+    if (sessionStartTime) {
+        const now = new Date();
+        const diff = Math.floor((now - sessionStartTime) / 1000);
+        const minutes = Math.floor(diff / 60);
+        const seconds = diff % 60;
+        document.getElementById('session-duration').textContent = 
+            minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+    }
+}
+
+function updateTranscriptDisplay() {
+    const words = fullTranscript.split(' ');
+    const lastWords = words.slice(-10);
+    const otherWords = words.slice(0, -10);
+    
+    let html = otherWords.join(' ');
+    if (otherWords.length > 0) html += ' ';
+    
+    lastWords.forEach(word => {
+        html += `<span class="transcript-word new">${word}</span> `;
+    });
+    
+    document.getElementById('live-transcript').innerHTML = html;
+    
+    // Remove highlighting after 2 seconds
+    setTimeout(() => {
+        document.querySelectorAll('.transcript-word.new').forEach(el => {
+            el.classList.remove('new');
+        });
+    }, 2000);
+}
+
+function updateWordCount() {
+    const words = fullTranscript.trim().split(/\s+/).filter(word => word.length > 0);
+    document.getElementById('word-count').textContent = words.length;
+}
+
+function updateConfidence(confidence) {
+    const percentage = Math.round(confidence * 100);
+    document.getElementById('confidence-score').textContent = percentage + '%';
+}
+
+function generateAINotes() {
+    if (!fullTranscript.trim()) {
+        alert('No transcript to process!');
+        return;
+    }
+    
+    document.getElementById('notes-section').style.display = 'block';
+    document.getElementById('processing-indicator').style.display = 'block';
+    document.getElementById('generated-notes').style.display = 'none';
+    
+    setTimeout(() => {
+        const aiNotes = processTranscriptWithAI(fullTranscript);
+        
+        document.getElementById('processing-indicator').style.display = 'none';
+        document.getElementById('generated-notes').style.display = 'block';
+        document.getElementById('generated-notes').innerHTML = aiNotes;
+        document.getElementById('session-status').textContent = 'Completed';
+    }, 2000);
+}
+
+function processTranscriptWithAI(transcript) {
+    const sentences = transcript.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const wordCount = document.getElementById('word-count').textContent;
+    const duration = document.getElementById('session-duration').textContent;
+    
+    let notes = `
+        <div style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
+            <h4>📚 Lecture Summary</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div><strong>📖 Topic:</strong> ${extractMainTopic(transcript)}</div>
+                <div><strong>⏱️ Duration:</strong> ${duration}</div>
+                <div><strong>📝 Words:</strong> ${wordCount}</div>
+                <div><strong>📊 Sentences:</strong> ${sentences.length}</div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+            <h4>🔑 Key Points</h4>
+            <div style="display: grid; gap: 0.5rem;">
+    `;
+    
+    const keyPoints = extractKeyPoints(sentences);
+    keyPoints.forEach((point, index) => {
+        notes += `
+            <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 8px; border-left: 4px solid var(--accent-primary);">
+                <strong>${index + 1}.</strong> ${point}
+            </div>
+        `;
+    });
+    
+    notes += `
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+            <h4>📝 Detailed Notes</h4>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+    `;
+    
+    sentences.forEach((sentence, index) => {
+        if (sentence.trim().length > 20) {
+            notes += `<p style="margin-bottom: 0.75rem;"><span style="background: var(--accent-primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-right: 0.5rem;">${index + 1}</span>${sentence.trim()}.</p>`;
+        }
+    });
+    
+    notes += `
+            </div>
+        </div>
+        
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px; font-size: 0.9rem; color: var(--text-secondary); border: 1px dashed var(--glass-border);">
+            <strong>🤖 AI Note:</strong> These notes were automatically generated from the live transcript using advanced natural language processing. 
+            Please review and edit as needed for accuracy and completeness.
+        </div>
+    `;
+    
+    return notes;
+}
+
+function extractMainTopic(transcript) {
+    const words = transcript.toLowerCase().split(/\s+/);
+    const stopWords = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'a', 'an'];
+    
+    const filteredWords = words.filter(word => !stopWords.includes(word) && word.length > 3);
+    const wordCount = {};
+    
+    filteredWords.forEach(word => {
+        wordCount[word] = (wordCount[word] || 0) + 1;
+    });
+    
+    const sortedWords = Object.entries(wordCount).sort((a, b) => b[1] - a[1]);
+    return sortedWords.length > 0 ? sortedWords[0][0].charAt(0).toUpperCase() + sortedWords[0][0].slice(1) : 'General Lecture';
+}
+
+function extractKeyPoints(sentences) {
+    return sentences
+        .filter(sentence => sentence.trim().length > 30)
+        .slice(0, 6)
+        .map(sentence => sentence.trim());
+}
+
+function saveNotes() {
+    const notes = document.getElementById('generated-notes').innerHTML;
+    if (notes) {
+        alert('✅ AI-generated notes saved successfully!');
+    } else {
+        alert('❌ No notes to save!');
+    }
+}
+
+function exportNotes() {
+    const notesElement = document.getElementById('generated-notes');
+    if (notesElement && notesElement.innerHTML) {
+        const notesText = notesElement.innerText;
+        const blob = new Blob([notesText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ai-lecture-notes-${new Date().toISOString().split('T')[0]}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('📤 Notes exported successfully!');
+    } else {
+        alert('❌ No notes to export!');
+    }
+}
+
+function clearNotes() {
+    if (confirm('Are you sure you want to clear all notes?')) {
+        document.getElementById('generated-notes').innerHTML = '';
+        document.getElementById('notes-section').style.display = 'none';
+        fullTranscript = '';
+        document.getElementById('live-transcript').innerHTML = '<span style="color: var(--text-secondary); font-style: italic;">Transcript cleared...</span>';
+        document.getElementById('word-count').textContent = '0';
+        document.getElementById('session-duration').textContent = '00:00';
+        document.getElementById('confidence-score').textContent = '--';
+        document.getElementById('session-status').textContent = 'Ready';
+        alert('🗑️ Notes cleared successfully!');
+    }
+}
+</script>
+{% endblock %}

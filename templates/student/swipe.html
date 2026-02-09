@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Find Your Perfect TA{% endblock %}
+
+{% block content %}
+<style>
+    .swipe-container { max-width: 400px; margin: 2rem auto; position: relative; height: 600px; }
+    .ta-card { position: absolute; width: 100%; height: 500px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); cursor: grab; transition: transform 0.3s; }
+    .ta-card:active { cursor: grabbing; }
+    .ta-card img { width: 100%; height: 60%; object-fit: cover; border-radius: 15px 15px 0 0; }
+    .ta-info { padding: 1.5rem; }
+    .ta-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem; }
+    .ta-subject { color: #3498db; font-weight: bold; margin-bottom: 0.5rem; }
+    .ta-bio { color: #666; font-size: 0.9rem; }
+    .swipe-actions { display: flex; justify-content: center; gap: 2rem; margin-top: 2rem; }
+    .swipe-btn { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 1.5rem; cursor: pointer; transition: transform 0.2s; }
+    .swipe-btn:hover { transform: scale(1.1); }
+    .reject-btn { background: #e74c3c; color: white; }
+    .like-btn { background: #27ae60; color: white; }
+    .no-more-cards { text-align: center; padding: 2rem; }
+</style>
+
+<div class="card">
+    <h1>Find Your Perfect Teaching Assistant 💕</h1>
+    <p>Swipe right to match, left to pass</p>
+</div>
+
+<div class="swipe-container">
+    {% for ta in ta_profiles %}
+    <div class="ta-card" data-ta-id="{{ ta.id }}" style="z-index: {{ loop.revindex }};">
+        <img src="https://thespeechstudiony.com/img/sofia.webp" alt="{{ ta.name }}" onerror="this.src='https://via.placeholder.com/400x300/3498db/ffffff?text={{ ta.name[0] }}';">
+        <div class="ta-info">
+            <div class="ta-name">{{ ta.name }}</div>
+            <div class="ta-subject">{{ ta.subjects }}</div>
+            <div class="ta-bio">{{ ta.bio }}</div>
+            <div style="margin-top: 1rem;">
+                ⭐ {{ "%.1f"|format(ta.rating) }} rating
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <div class="no-more-cards" id="noMoreCards" style="display: none;">
+        <h3>No more TAs to show! 🎉</h3>
+        <p>Check back later for new teaching assistants</p>
+        <a href="/student/matches" class="btn">View Your Matches</a>
+    </div>
+</div>
+
+<div class="swipe-actions">
+    <button class="swipe-btn reject-btn" onclick="swipeLeft()">❌</button>
+    <button class="swipe-btn like-btn" onclick="swipeRight()">💚</button>
+</div>
+
+<div class="card">
+    <h3>📊 Your Swipe Stats</h3>
+    <div class="stats">
+        <div class="stat-item">
+            <h3 id="totalSwipes">0</h3>
+            <p>Total Swipes</p>
+        </div>
+        <div class="stat-item">
+            <h3 id="matches">0</h3>
+            <p>Matches</p>
+        </div>
+        <div class="stat-item">
+            <h3 id="matchRate">0%</h3>
+            <p>Match Rate</p>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentCardIndex = 0;
+let totalSwipes = 0;
+let matches = 0;
+const cards = document.querySelectorAll('.ta-card');
+
+function swipeLeft() {
+    if (currentCardIndex < cards.length) {
+        animateCard(cards[currentCardIndex], 'left');
+        nextCard();
+    }
+}
+
+function swipeRight() {
+    if (currentCardIndex < cards.length) {
+        const taId = cards[currentCardIndex].dataset.taId;
+        
+        // Send match request to backend
+        fetch('/api/swipe', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ta_id: parseInt(taId)})
+        });
+        
+        animateCard(cards[currentCardIndex], 'right');
+        matches++;
+        nextCard();
+    }
+}
+
+function animateCard(card, direction) {
+    const translateX = direction === 'left' ? '-100%' : '100%';
+    const rotate = direction === 'left' ? '-30deg' : '30deg';
+    
+    card.style.transform = `translateX(${translateX}) rotate(${rotate})`;
+    card.style.opacity = '0';
+    
+    setTimeout(() => {
+        card.style.display = 'none';
+    }, 300);
+}
+
+function nextCard() {
+    totalSwipes++;
+    currentCardIndex++;
+    
+    updateStats();
+    
+    if (currentCardIndex >= cards.length) {
+        document.getElementById('noMoreCards').style.display = 'block';
+    }
+}
+
+function updateStats() {
+    document.getElementById('totalSwipes').textContent = totalSwipes;
+    document.getElementById('matches').textContent = matches;
+    const matchRate = totalSwipes > 0 ? Math.round((matches / totalSwipes) * 100) : 0;
+    document.getElementById('matchRate').textContent = matchRate + '%';
+}
+
+// Touch/drag support for mobile
+let startX = 0;
+let currentX = 0;
+let cardBeingDragged = null;
+
+cards.forEach(card => {
+    card.addEventListener('mousedown', startDrag);
+    card.addEventListener('touchstart', startDrag);
+});
+
+function startDrag(e) {
+    if (e.target.closest('.ta-card') !== cards[currentCardIndex]) return;
+    
+    cardBeingDragged = cards[currentCardIndex];
+    startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+    
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('touchmove', drag);
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchend', endDrag);
+}
+
+function drag(e) {
+    if (!cardBeingDragged) return;
+    
+    currentX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+    const diffX = currentX - startX;
+    const rotation = diffX * 0.1;
+    
+    cardBeingDragged.style.transform = `translateX(${diffX}px) rotate(${rotation}deg)`;
+}
+
+function endDrag() {
+    if (!cardBeingDragged) return;
+    
+    const diffX = currentX - startX;
+    
+    if (Math.abs(diffX) > 100) {
+        if (diffX > 0) {
+            swipeRight();
+        } else {
+            swipeLeft();
+        }
+    } else {
+        cardBeingDragged.style.transform = '';
+    }
+    
+    cardBeingDragged = null;
+    document.removeEventListener('mousemove', drag);
+    document.removeEventListener('touchmove', drag);
+    document.removeEventListener('mouseup', endDrag);
+    document.removeEventListener('touchend', endDrag);
+}
+</script>
+{% endblock %}

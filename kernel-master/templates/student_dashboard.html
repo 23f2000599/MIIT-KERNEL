@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Student Dashboard</h2>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Total Study Hours</h5>
+                <h3 class="text-primary">{{ (stats[0] or 0) // 60 }}h {{ (stats[0] or 0) % 60 }}m</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Sessions Completed</h5>
+                <h3 class="text-success">{{ stats[1] or 0 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Average Focus Score</h5>
+                <h3 class="text-warning">{{ "%.1f"|format(stats[2] or 0) }}%</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Matched TAs</h5>
+                <h3 class="text-info">{{ match_count }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('timers') }}" class="btn btn-primary mb-2 w-100">Start Study Timer</a>
+                <a href="{{ url_for('swipe') }}" class="btn btn-success mb-2 w-100">Find Teaching Assistant</a>
+                <a href="{{ url_for('notes') }}" class="btn btn-info w-100">View Notes</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Sessions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_sessions %}
+                    {% for session in recent_sessions %}
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                        <span>{{ session[1] }}</span>
+                        <span>{{ session[3] }}min</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No sessions yet. Start your first timer!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

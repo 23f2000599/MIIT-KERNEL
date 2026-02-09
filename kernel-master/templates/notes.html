@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Notes</h2>
+    {% if session.user_role == 'ta' %}
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal">Add Note</button>
+    {% endif %}
+</div>
+
+<div class="row">
+    {% if notes %}
+        {% for note in notes %}
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h6>{{ note[2] }}</h6>
+                    <small class="text-muted">{{ note[4] }}</small>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ note[3][:100] }}{% if note[3]|length > 100 %}...{% endif %}</p>
+                    {% if note[4] %}
+                    <span class="badge bg-secondary">{{ note[4] }}</span>
+                    {% endif %}
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewNote({{ note[0] }})">View Full</button>
+                        <button class="btn btn-sm btn-outline-success">Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12 text-center">
+            <h4>No notes available</h4>
+            {% if session.user_role == 'ta' %}
+                <p>Start sharing knowledge with your students!</p>
+            {% else %}
+                <p>Your TAs haven't shared any notes yet.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% if session.user_role == 'ta' %}
+<!-- Add Note Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_note') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="subject" name="subject">
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Content</label>
+                        <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function viewNote(noteId) {
+    alert('Full note view coming soon!');
+}
+</script>
+{% endblock %}

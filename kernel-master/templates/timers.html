@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Study Timers</h2>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <div class="card timer-card">
+            <div class="card-body text-center">
+                <h5>Pomodoro Timer</h5>
+                <p>25 min work + 5 min break</p>
+                <form method="POST" action="{{ url_for('start_timer') }}">
+                    <input type="hidden" name="timer_type" value="Pomodoro">
+                    <input type="hidden" name="duration" value="25">
+                    <button type="submit" class="btn btn-primary">Start</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card timer-card">
+            <div class="card-body text-center">
+                <h5>Deep Focus Timer</h5>
+                <p>90 minutes of deep work</p>
+                <form method="POST" action="{{ url_for('start_timer') }}">
+                    <input type="hidden" name="timer_type" value="Deep Focus">
+                    <input type="hidden" name="duration" value="90">
+                    <button type="submit" class="btn btn-success">Start</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card timer-card">
+            <div class="card-body text-center">
+                <h5>52-17 Timer</h5>
+                <p>52 min work + 17 min break</p>
+                <form method="POST" action="{{ url_for('start_timer') }}">
+                    <input type="hidden" name="timer_type" value="52-17">
+                    <input type="hidden" name="duration" value="52">
+                    <button type="submit" class="btn btn-warning">Start</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card timer-card">
+            <div class="card-body text-center">
+                <h5>Timeboxing Timer</h5>
+                <p>Custom time blocks</p>
+                <form method="POST" action="{{ url_for('start_timer') }}">
+                    <input type="hidden" name="timer_type" value="Timeboxing">
+                    <input type="number" name="duration" placeholder="Minutes" class="form-control mb-2" required>
+                    <button type="submit" class="btn btn-info">Start</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card timer-card">
+            <div class="card-body text-center">
+                <h5>Flowtime Timer</h5>
+                <p>Work until natural break</p>
+                <form method="POST" action="{{ url_for('start_timer') }}">
+                    <input type="hidden" name="timer_type" value="Flowtime">
+                    <input type="hidden" name="duration" value="120">
+                    <button type="submit" class="btn btn-secondary">Start</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card timer-card">
+            <div class="card-body text-center">
+                <h5>Exam Countdown</h5>
+                <p>Intensive exam prep</p>
+                <form method="POST" action="{{ url_for('start_timer') }}">
+                    <input type="hidden" name="timer_type" value="Exam Countdown">
+                    <input type="number" name="duration" placeholder="Minutes" class="form-control mb-2" required>
+                    <button type="submit" class="btn btn-danger">Start</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

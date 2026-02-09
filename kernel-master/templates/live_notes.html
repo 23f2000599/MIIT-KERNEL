@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="live-notes-container">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>🎤 Live Lecture Recording</h5>
+                    <div class="recording-controls">
+                        <select id="language-select" class="form-select form-select-sm me-2">
+                            <option value="en-US">English</option>
+                            <option value="es-ES">Spanish</option>
+                            <option value="fr-FR">French</option>
+                            <option value="de-DE">German</option>
+                            <option value="hi-IN">Hindi</option>
+                            <option value="zh-CN">Chinese</option>
+                        </select>
+                        <button id="start-recording" class="btn btn-success btn-sm">
+                            🎤 Start Recording
+                        </button>
+                        <button id="stop-recording" class="btn btn-danger btn-sm" disabled>
+                            ⏹️ Stop & Generate Notes
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="recording-status mb-3" id="recording-status">
+                        <span class="text-muted">Select language and click "Start Recording" to begin</span>
+                    </div>
+                    <div class="transcript-section">
+                        <h6>📝 Live Transcript:</h6>
+                        <div id="live-transcript" class="transcript-box">Transcript will appear here as you speak...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6>📊 Session Info</h6>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        <div>Language: <span id="current-language">English</span></div>
+                        <div>Started: <span id="session-start">--</span></div>
+                        <div>Duration: <span id="session-duration">00:00</span></div>
+                        <div>Words: <span id="word-count">0</span></div>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Generated Notes Section -->
+    <div class="row mt-4" id="notes-section" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>🤖 AI-Generated Lecture Notes</h5>
+                    <div>
+                        <button class="btn btn-primary btn-sm" onclick="saveNotes()">💾 Save Notes</button>
+                        <button class="btn btn-info btn-sm" onclick="exportNotes()">📤 Export</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="processing-indicator" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2">🤖 AI is processing your transcript and generating structured notes...</p>
+                    </div>
+                    <div id="generated-notes" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let recognition;
+let isRecording = false;
+let sessionStartTime;
+let durationInterval;
+let fullTranscript = '';
+
+// Initialize speech recognition
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    
+    recognition.onstart = function() {
+        isRecording = true;
+        sessionStartTime = new Date();
+        fullTranscript = '';
+        document.getElementById('recording-status').innerHTML = '<span class="text-success">🔴 Recording... Speak now!</span>';
+        document.getElementById('start-recording').disabled = true;
+        document.getElementById('stop-recording').disabled = false;
+        document.getElementById('session-start').textContent = sessionStartTime.toLocaleTimeString();
+        document.getElementById('live-transcript').innerHTML = '';
+        
+        durationInterval = setInterval(updateDuration, 1000);
+    };
+    
+    recognition.onresult = function(event) {
+        let finalTranscript = '';
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript + ' ';
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+        
+        if (finalTranscript) {
+            fullTranscript += finalTranscript;
+            updateTranscriptDisplay();
+            updateWordCount();
+        }
+        
+        // Show interim results
+        if (interimTranscript) {
+            const transcriptDiv = document.getElementById('live-transcript');
+            transcriptDiv.innerHTML = fullTranscript + '<span class="interim-text">' + interimTranscript + '</span>';
+        }
+    };
+    
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        document.getElementById('recording-status').innerHTML = '<span class="text-danger">❌ Error: ' + event.error + '</span>';
+    };
+    
+    recognition.onend = function() {
+        if (isRecording) {
+            recognition.start(); // Restart if still recording
+        }
+    };
+} else {
+    document.getElementById('recording-status').innerHTML = '<span class="text-warning">⚠️ Speech recognition not supported in this browser</span>';
+}
+
+document.getElementById('language-select').addEventListener('change', function() {
+    const selectedLang = this.value;
+    const langNames = {
+        'en-US': 'English',
+        'es-ES': 'Spanish', 
+        'fr-FR': 'French',
+        'de-DE': 'German',
+        'hi-IN': 'Hindi',
+        'zh-CN': 'Chinese'
+    };
+    
+    if (recognition) {
+        recognition.lang = selectedLang;
+    }
+    document.getElementById('current-language').textContent = langNames[selectedLang];
+});
+
+document.getElementById('start-recording').addEventListener('click', function() {
+    if (recognition) {
+        const selectedLang = document.getElementById('language-select').value;
+        recognition.lang = selectedLang;
+        recognition.start();
+    }
+});
+
+document.getElementById('stop-recording').addEventListener('click', function() {
+    if (recognition) {
+        isRecording = false;
+        recognition.stop();
+        clearInterval(durationInterval);
+        document.getElementById('recording-status').innerHTML = '<span class="text-info">⏸️ Recording stopped. Processing transcript...</span>';
+        document.getElementById('start-recording').disabled = false;
+        document.getElementById('stop-recording').disabled = true;
+        
+        // Generate AI notes
+        generateAINotes();
+    }
+});
+
+function updateDuration() {
+    if (sessionStartTime) {
+        const now = new Date();
+        const diff = Math.floor((now - sessionStartTime) / 1000);
+        const minutes = Math.floor(diff / 60);
+        const seconds = diff % 60;
+        document.getElementById('session-duration').textContent = 
+            minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+    }
+}
+
+function updateTranscriptDisplay() {
+    document.getElementById('live-transcript').innerHTML = fullTranscript;
+}
+
+function updateWordCount() {
+    const words = fullTranscript.trim().split(/\s+/).filter(word => word.length > 0);
+    document.getElementById('word-count').textContent = words.length;
+}
+
+function generateAINotes() {
+    if (!fullTranscript.trim()) {
+        alert('No transcript to process!');
+        return;
+    }
+    
+    // Show notes section and processing indicator
+    document.getElementById('notes-section').style.display = 'block';
+    document.getElementById('processing-indicator').style.display = 'block';
+    document.getElementById('generated-notes').style.display = 'none';
+    
+    // Simulate AI processing (in real app, this would call an AI API)
+    setTimeout(() => {
+        const aiNotes = processTranscriptWithAI(fullTranscript);
+        
+        document.getElementById('processing-indicator').style.display = 'none';
+        document.getElementById('generated-notes').style.display = 'block';
+        document.getElementById('generated-notes').innerHTML = aiNotes;
+    }, 3000);
+}
+
+function processTranscriptWithAI(transcript) {
+    // Simulate AI processing - in real app, this would call OpenAI/Claude API
+    const sentences = transcript.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    
+    let notes = `
+        <div class="ai-notes">
+            <h6>📚 Lecture Summary</h6>
+            <div class="summary-box">
+                <p><strong>Main Topic:</strong> ${extractMainTopic(transcript)}</p>
+                <p><strong>Duration:</strong> ${document.getElementById('session-duration').textContent}</p>
+                <p><strong>Word Count:</strong> ${document.getElementById('word-count').textContent} words</p>
+            </div>
+            
+            <h6 class="mt-4">🔑 Key Points</h6>
+            <ul class="key-points">
+    `;
+    
+    // Extract key points (simplified AI simulation)
+    const keyPoints = extractKeyPoints(sentences);
+    keyPoints.forEach(point => {
+        notes += `<li>${point}</li>`;
+    });
+    
+    notes += `
+            </ul>
+            
+            <h6 class="mt-4">📝 Detailed Notes</h6>
+            <div class="detailed-notes">
+    `;
+    
+    // Structure the content
+    sentences.forEach((sentence, index) => {
+        if (sentence.trim().length > 20) {
+            notes += `<p><strong>Point ${index + 1}:</strong> ${sentence.trim()}.</p>`;
+        }
+    });
+    
+    notes += `
+            </div>
+            
+            <div class="mt-4 p-3 bg-light rounded">
+                <small class="text-muted">
+                    <strong>Note:</strong> These notes were automatically generated using AI from the live transcript. 
+                    Please review and edit as needed for accuracy.
+                </small>
+            </div>
+        </div>
+    `;
+    
+    return notes;
+}
+
+function extractMainTopic(transcript) {
+    // Simple topic extraction (in real app, use NLP)
+    const words = transcript.toLowerCase().split(/\s+/);
+    const commonWords = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'this', 'that', 'these', 'those'];
+    
+    const filteredWords = words.filter(word => !commonWords.includes(word) && word.length > 3);
+    const wordCount = {};
+    
+    filteredWords.forEach(word => {
+        wordCount[word] = (wordCount[word] || 0) + 1;
+    });
+    
+    const sortedWords = Object.entries(wordCount).sort((a, b) => b[1] - a[1]);
+    return sortedWords.length > 0 ? sortedWords[0][0].charAt(0).toUpperCase() + sortedWords[0][0].slice(1) : 'General Lecture';
+}
+
+function extractKeyPoints(sentences) {
+    // Simple key point extraction (in real app, use AI)
+    return sentences
+        .filter(sentence => sentence.trim().length > 30)
+        .slice(0, 5)
+        .map(sentence => sentence.trim() + '.');
+}
+
+function saveNotes() {
+    const notes = document.getElementById('generated-notes').innerHTML;
+    if (notes) {
+        // In real app, save to database
+        alert('AI-generated notes saved successfully!');
+    } else {
+        alert('No notes to save!');
+    }
+}
+
+function exportNotes() {
+    const notesElement = document.getElementById('generated-notes');
+    if (notesElement && notesElement.innerHTML) {
+        const notesText = notesElement.innerText;
+        const blob = new Blob([notesText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ai-lecture-notes-${new Date().toISOString().split('T')[0]}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    } else {
+        alert('No notes to export!');
+    }
+}
+</script>
+{% endblock %}

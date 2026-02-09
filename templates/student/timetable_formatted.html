@@ -1,0 +1,547 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Timetable{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>📅 Smart Timetable</h1>
+            <p>AI-powered schedule optimization with deadline management</p>
+        </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button class="btn btn-success" onclick="showAddDeadlineModal()">➕ Add Deadline</button>
+            <button class="btn" onclick="generateTimetable()">🤖 Generate AI Timetable</button>
+        </div>
+    </div>
+</div>
+
+<div class="stats">
+    <div class="stat-item">
+        <h3 id="totalDeadlines">{{ deadlines|length }}</h3>
+        <p>Total Deadlines</p>
+    </div>
+    <div class="stat-item">
+        <h3 id="upcomingDeadlines">0</h3>
+        <p>Upcoming (7 days)</p>
+    </div>
+    <div class="stat-item">
+        <h3 id="completedDeadlines">0</h3>
+        <p>Completed</p>
+    </div>
+    <div class="stat-item">
+        <h3 id="stressLevel">Low</h3>
+        <p>Stress Level</p>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+            <h3>📅 Calendar View</h3>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button class="btn" onclick="previousMonth()">‹</button>
+                <h4 id="currentMonth" style="margin: 0 1rem; white-space: nowrap;"></h4>
+                <button class="btn" onclick="nextMonth()">›</button>
+            </div>
+        </div>
+        <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--glass-border); min-height: 300px;"></div>
+    </div>
+    
+    <div class="card">
+        <h3>📋 Deadlines</h3>
+        <div id="deadlines-list" style="max-height: 400px; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<!-- Add Deadline Modal -->
+<div id="addDeadlineModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: var(--glass-bg); padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%;">
+        <h3>Add New Deadline</h3>
+        <form id="deadlineForm" style="display: grid; gap: 1rem; margin-top: 1rem;">
+            <div>
+                <label>Title:</label>
+                <input type="text" id="deadlineTitle" required style="width: 100%; padding: 0.75rem; margin-top: 0.25rem;">
+            </div>
+            <div>
+                <label>Subject:</label>
+                <select id="deadlineSubject" required style="width: 100%; padding: 0.75rem; margin-top: 0.25rem;">
+                    <option value="">Select Subject</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="English">English</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label>Due Date:</label>
+                <input type="datetime-local" id="deadlineDate" required style="width: 100%; padding: 0.75rem; margin-top: 0.25rem;">
+            </div>
+            <div>
+                <label>Priority:</label>
+                <select id="deadlinePriority" required style="width: 100%; padding: 0.75rem; margin-top: 0.25rem;">
+                    <option value="low">🟢 Low</option>
+                    <option value="medium">🟡 Medium</option>
+                    <option value="high">🔴 High</option>
+                    <option value="critical">⚫ Critical</option>
+                </select>
+            </div>
+            <div>
+                <label>Estimated Study Hours:</label>
+                <input type="number" id="studyHours" min="1" max="100" value="5" style="width: 100%; padding: 0.75rem; margin-top: 0.25rem;">
+            </div>
+            <div>
+                <label>Description:</label>
+                <textarea id="deadlineDescription" rows="3" style="width: 100%; padding: 0.75rem; margin-top: 0.25rem;"></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="saveDeadline()">Save Deadline</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- AI Timetable Modal -->
+<div id="timetableModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: var(--glass-bg); padding: 2rem; border-radius: 12px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3>🤖 AI Generated Study Timetable</h3>
+            <button onclick="closeModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✕</button>
+        </div>
+        <div id="timetable-content">
+            <div style="text-align: center; padding: 2rem;">
+                <div class="loading-spinner" style="margin: 0 auto 1rem;"></div>
+                <p>AI is analyzing your deadlines and generating optimal study schedule...</p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem; justify-content: flex-end;">
+            <button class="btn" onclick="closeModal()">Close</button>
+            <button class="btn" onclick="applyTimetable()" id="applyBtn" style="display: none;">📅 Add to Calendar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.calendar-day {
+    background: var(--glass-bg);
+    padding: 0.5rem;
+    min-height: 80px;
+    border-radius: 4px;
+    position: relative;
+    font-size: 0.9rem;
+}
+
+.calendar-day.other-month {
+    opacity: 0.5;
+}
+
+.day-number {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.deadline-item {
+    background: var(--accent-primary);
+    color: white;
+    padding: 0.25rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.deadline-item.priority-high {
+    background: var(--accent-red);
+}
+
+.deadline-item.priority-critical {
+    background: #000;
+}
+
+.deadline-item.priority-low {
+    background: var(--accent-green);
+}
+
+.deadline-item.priority-medium {
+    background: var(--accent-orange);
+}
+
+.deadline-card {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid var(--accent-primary);
+    transition: transform 0.2s ease;
+}
+
+.deadline-card:hover {
+    transform: translateY(-2px);
+}
+
+.deadline-card.priority-high {
+    border-left-color: var(--accent-red);
+}
+
+.deadline-card.priority-critical {
+    border-left-color: #000;
+}
+
+.deadline-card.priority-low {
+    border-left-color: var(--accent-green);
+}
+
+.deadline-card.priority-medium {
+    border-left-color: var(--accent-orange);
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .calendar-day {
+        min-height: 60px;
+        padding: 0.25rem;
+    }
+    
+    .deadline-item {
+        font-size: 0.6rem;
+    }
+    
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+
+<script>
+let currentDate = new Date();
+let deadlines = {{ deadlines|tojson|safe }};
+let generatedTimetable = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadDeadlines();
+    updateCalendar();
+    updateStats();
+});
+
+function loadDeadlines() {
+    deadlines.forEach(deadline => {
+        deadline.dueDate = new Date(deadline[4]);
+        deadline.id = deadline[0];
+        deadline.title = deadline[1];
+        deadline.subject = deadline[2];
+        deadline.priority = deadline[5];
+        deadline.studyHours = deadline[6];
+        deadline.completed = deadline[8];
+        deadline.description = deadline[7];
+    });
+    
+    updateDeadlinesList();
+    updateStats();
+}
+
+function updateCalendar() {
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+    
+    document.getElementById('currentMonth').textContent = 
+        `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+    
+    const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    const calendarGrid = document.getElementById('calendar-grid');
+    calendarGrid.innerHTML = '';
+    
+    // Add day headers
+    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    dayHeaders.forEach(day => {
+        const dayHeader = document.createElement('div');
+        dayHeader.style.cssText = 'padding: 0.5rem; font-weight: bold; text-align: center; background: var(--bg-secondary);';
+        dayHeader.textContent = day;
+        calendarGrid.appendChild(dayHeader);
+    });
+    
+    // Add calendar days
+    for (let i = 0; i < 42; i++) {
+        const cellDate = new Date(startDate);
+        cellDate.setDate(startDate.getDate() + i);
+        
+        const dayCell = document.createElement('div');
+        dayCell.className = `calendar-day ${cellDate.getMonth() !== currentDate.getMonth() ? 'other-month' : ''}`;
+        
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'day-number';
+        dayNumber.textContent = cellDate.getDate();
+        dayCell.appendChild(dayNumber);
+        
+        // Add deadlines for this day
+        const dayDeadlines = deadlines.filter(deadline => 
+            deadline.dueDate.toDateString() === cellDate.toDateString()
+        );
+        
+        dayDeadlines.forEach(deadline => {
+            const deadlineEl = document.createElement('div');
+            deadlineEl.className = `deadline-item priority-${deadline.priority}`;
+            deadlineEl.textContent = deadline.title;
+            deadlineEl.title = `${deadline.title} - ${deadline.subject}`;
+            dayCell.appendChild(deadlineEl);
+        });
+        
+        calendarGrid.appendChild(dayCell);
+    }
+}
+
+function updateDeadlinesList() {
+    const deadlinesList = document.getElementById('deadlines-list');
+    deadlinesList.innerHTML = '';
+    
+    const sortedDeadlines = deadlines
+        .filter(d => !d.completed)
+        .sort((a, b) => a.dueDate - b.dueDate);
+    
+    if (sortedDeadlines.length === 0) {
+        deadlinesList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No pending deadlines</p>';
+        return;
+    }
+    
+    sortedDeadlines.forEach(deadline => {
+        const daysLeft = Math.ceil((deadline.dueDate - new Date()) / (1000 * 60 * 60 * 24));
+        const deadlineEl = document.createElement('div');
+        deadlineEl.className = `deadline-card priority-${deadline.priority}`;
+        deadlineEl.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <h4 style="margin: 0;">${deadline.title}</h4>
+                <span style="font-size: 1.2rem;">
+                    ${deadline.priority === 'critical' ? '⚫' : 
+                      deadline.priority === 'high' ? '🔴' : 
+                      deadline.priority === 'medium' ? '🟡' : '🟢'}
+                </span>
+            </div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                <p style="margin: 0.25rem 0;">${deadline.subject}</p>
+                <p style="margin: 0.25rem 0;">${daysLeft > 0 ? `${daysLeft} days left` : 'Due today!'}</p>
+                <p style="margin: 0.25rem 0;">${deadline.studyHours}h study time</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <button class="btn btn-success" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="markCompleted(${deadline.id})">✓ Complete</button>
+                <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="deleteDeadline(${deadline.id})">✗ Delete</button>
+            </div>
+        `;
+        deadlinesList.appendChild(deadlineEl);
+    });
+}
+
+function updateStats() {
+    const total = deadlines.length;
+    const upcoming = deadlines.filter(d => {
+        const daysLeft = (d.dueDate - new Date()) / (1000 * 60 * 60 * 24);
+        return !d.completed && daysLeft <= 7 && daysLeft >= 0;
+    }).length;
+    const completed = deadlines.filter(d => d.completed).length;
+    
+    const highPriority = deadlines.filter(d => !d.completed && d.priority === 'high').length;
+    const criticalPriority = deadlines.filter(d => !d.completed && d.priority === 'critical').length;
+    
+    let stressLevel = 'Low';
+    if (criticalPriority > 0 || highPriority > 2) stressLevel = 'High';
+    else if (highPriority > 0 || upcoming > 3) stressLevel = 'Medium';
+    
+    document.getElementById('totalDeadlines').textContent = total;
+    document.getElementById('upcomingDeadlines').textContent = upcoming;
+    document.getElementById('completedDeadlines').textContent = completed;
+    document.getElementById('stressLevel').textContent = stressLevel;
+}
+
+function showAddDeadlineModal() {
+    document.getElementById('addDeadlineModal').style.display = 'flex';
+}
+
+function saveDeadline() {
+    const title = document.getElementById('deadlineTitle').value;
+    const subject = document.getElementById('deadlineSubject').value;
+    const dueDate = document.getElementById('deadlineDate').value;
+    const priority = document.getElementById('deadlinePriority').value;
+    const studyHours = parseInt(document.getElementById('studyHours').value);
+    const description = document.getElementById('deadlineDescription').value;
+    
+    if (!title || !subject || !dueDate || !priority) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    fetch('/calendar/add-deadline', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            title: title,
+            subject: subject,
+            due_date: dueDate,
+            priority: priority,
+            study_hours: studyHours,
+            description: description
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Deadline added successfully!');
+            location.reload();
+        } else {
+            alert('Error adding deadline');
+        }
+    });
+}
+
+function generateTimetable() {
+    document.getElementById('timetableModal').style.display = 'flex';
+    
+    fetch('/calendar/generate-timetable', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            generatedTimetable = data.timetable;
+            displayTimetable(data.timetable);
+            document.getElementById('applyBtn').style.display = 'inline-block';
+        } else {
+            document.getElementById('timetable-content').innerHTML = `
+                <div style="background: var(--accent-orange); color: white; padding: 1rem; border-radius: 8px;">
+                    <h4>No Timetable Generated</h4>
+                    <p>${data.message}</p>
+                </div>
+            `;
+        }
+    });
+}
+
+function displayTimetable(timetable) {
+    const content = document.getElementById('timetable-content');
+    
+    let html = `
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; text-align: center;">
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                <h3>${timetable.total_sessions}</h3>
+                <p>Study Sessions</p>
+            </div>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                <h3>${timetable.total_hours}h</h3>
+                <p>Total Study Time</p>
+            </div>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                <h3>${timetable.subjects.length}</h3>
+                <p>Subjects</p>
+            </div>
+        </div>
+    `;
+    
+    timetable.daily_schedule.forEach(day => {
+        if (day.sessions.length === 0) return;
+        
+        html += `
+            <div style="margin-bottom: 2rem;">
+                <h4 style="background: var(--accent-primary); color: white; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">
+                    ${day.day_name} - ${day.date}
+                </h4>
+        `;
+        
+        day.sessions.forEach(session => {
+            const bgColor = session.title.includes('Break') ? 'var(--bg-secondary)' : 
+                           session.stress_level === 'critical' ? 'var(--accent-red)' :
+                           session.stress_level === 'high' ? 'var(--accent-orange)' : 'var(--accent-primary)';
+            
+            html += `
+                <div style="background: ${bgColor}; color: white; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h5 style="margin: 0;">${session.title}</h5>
+                        <p style="margin: 0.25rem 0; opacity: 0.9;">${session.description}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: bold;">${session.time}</div>
+                        <div style="font-size: 0.9rem; opacity: 0.8;">${session.duration}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+    });
+    
+    content.innerHTML = html;
+}
+
+function applyTimetable() {
+    if (!generatedTimetable) {
+        alert('No timetable to apply');
+        return;
+    }
+    
+    fetch('/calendar/apply-timetable', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ timetable: generatedTimetable })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('📅 Timetable added to your calendar successfully!');
+            closeModal();
+            setTimeout(() => location.reload(), 500);
+        } else {
+            alert('Error applying timetable: ' + data.message);
+        }
+    });
+}
+
+function markCompleted(id) {
+    const deadline = deadlines.find(d => d.id === id);
+    if (deadline) {
+        deadline.completed = true;
+        updateCalendar();
+        updateDeadlinesList();
+        updateStats();
+    }
+}
+
+function deleteDeadline(id) {
+    if (confirm('Are you sure you want to delete this deadline?')) {
+        deadlines = deadlines.filter(d => d.id !== id);
+        updateCalendar();
+        updateDeadlinesList();
+        updateStats();
+    }
+}
+
+function closeModal() {
+    document.getElementById('addDeadlineModal').style.display = 'none';
+    document.getElementById('timetableModal').style.display = 'none';
+}
+
+function previousMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    updateCalendar();
+}
+
+function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    updateCalendar();
+}
+</script>
+{% endblock %}

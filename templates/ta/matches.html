@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Student Matches{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Student Match Requests 💕</h1>
+    <p>Manage your student connections and teaching opportunities</p>
+</div>
+
+{% if pending %}
+<div class="card">
+    <h3>🔔 Pending Requests ({{ pending|length }})</h3>
+    <div class="grid">
+        {% for match, student in pending %}
+        <div class="card" style="border: 2px solid #f39c12;">
+            <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                <img src="https://via.placeholder.com/60x60/f39c12/ffffff?text={{ student.name[0] }}" 
+                     style="border-radius: 50%; margin-right: 1rem;" alt="{{ student.name }}">
+                <div>
+                    <h3>{{ student.name }}</h3>
+                    <p style="color: #666; margin: 0;">{{ student.email }}</p>
+                    <p style="color: #f39c12; margin: 0; font-size: 0.9rem;">Requested {{ match.created_at.strftime('%B %d') }}</p>
+                </div>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                <p style="margin: 0; font-size: 0.9rem;"><strong>Student Profile:</strong></p>
+                <p style="margin: 0.5rem 0 0 0; color: #666;">Looking for help with advanced mathematics and exam preparation. Active learner with consistent study habits.</p>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-success" onclick="handleMatch({{ match.id }}, 'accepted')" style="flex: 1;">
+                    ✅ Accept
+                </button>
+                <button class="btn btn-danger" onclick="handleMatch({{ match.id }}, 'rejected')" style="flex: 1;">
+                    ❌ Decline
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if accepted %}
+<div class="card">
+    <h3>👥 Active Students ({{ accepted|length }})</h3>
+    <div class="grid">
+        {% for match, student in accepted %}
+        <div class="card" style="border: 2px solid #27ae60;">
+            <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                <img src="https://via.placeholder.com/60x60/27ae60/ffffff?text={{ student.name[0] }}" 
+                     style="border-radius: 50%; margin-right: 1rem;" alt="{{ student.name }}">
+                <div>
+                    <h3>{{ student.name }}</h3>
+                    <p style="color: #666; margin: 0;">{{ student.email }}</p>
+                    <p style="color: #27ae60; margin: 0; font-size: 0.9rem;">Matched since {{ match.created_at.strftime('%B %d') }}</p>
+                </div>
+            </div>
+            
+            <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Study Hours This Week:</span>
+                    <strong>12.5h</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Focus Score:</span>
+                    <strong>87%</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Last Session:</span>
+                    <strong>Yesterday</strong>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn" onclick="startSession({{ student.id }})" style="flex: 1;">
+                    🎓 Start Session
+                </button>
+                <button class="btn" onclick="sendMessage({{ student.id }})" style="flex: 1;">
+                    💬 Message
+                </button>
+                <button class="btn" onclick="viewProgress({{ student.id }})">
+                    📊 Progress
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if not pending and not accepted %}
+<div class="card" style="text-align: center;">
+    <h3>No student matches yet 📚</h3>
+    <p>Students will find you through the swipe feature. Make sure your profile is complete!</p>
+    <a href="/settings" class="btn">Update Profile</a>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>📊 Match Statistics</h3>
+    <div class="stats">
+        <div class="stat-item">
+            <h3>{{ (pending|length) + (accepted|length) }}</h3>
+            <p>Total Requests</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ accepted|length }}</h3>
+            <p>Active Students</p>
+        </div>
+        <div class="stat-item">
+            <h3>{% if (pending|length) + (accepted|length) > 0 %}{{ "%.0f"|format((accepted|length) / ((pending|length) + (accepted|length)) * 100) }}%{% else %}0%{% endif %}</h3>
+            <p>Acceptance Rate</p>
+        </div>
+        <div class="stat-item">
+            <h3>4.8⭐</h3>
+            <p>Avg Rating</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>💡 Tips for Better Matches</h3>
+    <ul style="margin: 1rem 0; padding-left: 2rem;">
+        <li>Keep your profile updated with current subjects and expertise</li>
+        <li>Respond to match requests promptly</li>
+        <li>Maintain regular communication with your students</li>
+        <li>Share helpful study materials and notes</li>
+        <li>Schedule regular check-ins and progress reviews</li>
+    </ul>
+</div>
+
+<script>
+function handleMatch(matchId, action) {
+    const actionText = action === 'accepted' ? 'accept' : 'decline';
+    
+    if (confirm(`Are you sure you want to ${actionText} this match request?`)) {
+        fetch(`/api/match/${matchId}/${action}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error processing request. Please try again.');
+            }
+        })
+        .catch(error => {
+            alert('Error processing request. Please try again.');
+        });
+    }
+}
+
+function startSession(studentId) {
+    if (confirm('Start a live session with this student?')) {
+        alert(`Starting session with student ${studentId}... (Feature coming soon!)`);
+    }
+}
+
+function sendMessage(studentId) {
+    alert(`Opening chat with student ${studentId}... (Messaging feature coming soon!)`);
+}
+
+function viewProgress(studentId) {
+    alert(`Viewing progress for student ${studentId}... (Analytics feature coming soon!)`);
+}
+</script>
+{% endblock %}

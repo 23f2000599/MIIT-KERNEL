@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Your Study Statistics</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Timer Usage</h5>
+            </div>
+            <div class="card-body">
+                {% if timer_stats %}
+                    {% for stat in timer_stats %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{{ stat[0] }}</span>
+                        <span>{{ stat[2] }} sessions ({{ stat[1] }}min)</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No timer data yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Daily Progress (Last 7 Days)</h5>
+            </div>
+            <div class="card-body">
+                {% if daily_stats %}
+                    {% for stat in daily_stats %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{{ stat[0] }}</span>
+                        <span>{{ stat[1] }} minutes</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No daily data yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Focus Trends</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="focusChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Sample chart - in real app, this would use actual data
+const ctx = document.getElementById('focusChart').getContext('2d');
+const focusChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+            label: 'Focus Score',
+            data: [85, 78, 92, 88, 76, 89, 94],
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Settings ⚙️</h1>
+    <p>Customize your AI Learning Companion experience</p>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>👤 Profile Settings</h3>
+        <form style="display: grid; gap: 1rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Full Name:</label>
+                <input type="text" value="{{ session.name }}" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Email:</label>
+                <input type="email" value="{{ session.email }}" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            {% if session.role == 'ta' %}
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Subjects:</label>
+                <input type="text" placeholder="e.g., Mathematics, Physics, Chemistry" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Bio:</label>
+                <textarea placeholder="Tell students about your teaching experience..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; height: 100px;"></textarea>
+            </div>
+            {% endif %}
+            
+            <button type="button" class="btn btn-success" onclick="saveProfile()">Save Profile</button>
+        </form>
+    </div>
+    
+    <div class="card">
+        <h3>🔒 Security Settings</h3>
+        <div style="display: grid; gap: 1rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Current Password:</label>
+                <input type="password" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">New Password:</label>
+                <input type="password" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Confirm New Password:</label>
+                <input type="password" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <button type="button" class="btn" onclick="changePassword()">Change Password</button>
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                <label style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                    <div class="toggle-switch">
+                        <input type="checkbox" onchange="toggleSetting(this, 'twoFactor')">
+                        <span class="slider"></span>
+                    </div>
+                    <span style="margin-left: 0.5rem;">Enable two-factor authentication</span>
+                </label>
+                <p style="font-size: 0.8rem; color: #666;">Add an extra layer of security to your account</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if session.role == 'student' %}
+<div class="card">
+    <h3>🎯 Study Preferences</h3>
+    <div class="grid">
+        <div>
+            <h4>Default Timer Settings</h4>
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Preferred Timer:</label>
+                <select style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <option>Pomodoro Timer</option>
+                    <option>Deep Focus Timer</option>
+                    <option>52-17 Timer</option>
+                    <option>Custom Smart Timer</option>
+                </select>
+            </div>
+            
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Default Duration (minutes):</label>
+                <input type="number" value="25" min="5" max="180" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Break Duration (minutes):</label>
+                <input type="number" value="5" min="1" max="30" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+        </div>
+        
+        <div>
+            <h4>Focus Enhancement</h4>
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Default Sound:</label>
+                <select style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <option>No Sound</option>
+                    <option>Rain Sounds</option>
+                    <option>Forest Ambience</option>
+                    <option>Cafe Noise</option>
+                    <option>White Noise</option>
+                </select>
+            </div>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" style="margin-right: 0.5rem;"> Auto-enable focus lock
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> Block social media during sessions
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" style="margin-right: 0.5rem;"> Show focus score after each session
+            </label>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if session.role == 'ta' %}
+<div class="card">
+    <h3>🎓 Teaching Preferences</h3>
+    <div class="grid">
+        <div>
+            <h4>Availability Settings</h4>
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Available Days:</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" checked style="margin-right: 0.25rem;"> Mon
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" checked style="margin-right: 0.25rem;"> Tue
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" checked style="margin-right: 0.25rem;"> Wed
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" checked style="margin-right: 0.25rem;"> Thu
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" checked style="margin-right: 0.25rem;"> Fri
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" style="margin-right: 0.25rem;"> Sat
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" style="margin-right: 0.25rem;"> Sun
+                    </label>
+                </div>
+            </div>
+            
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Available Hours:</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="time" value="09:00" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <span>to</span>
+                    <input type="time" value="17:00" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <h4>Match Preferences</h4>
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Maximum Students:</label>
+                <input type="number" value="10" min="1" max="50" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> Auto-accept matches
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" style="margin-right: 0.5rem;"> Only accept students with 80%+ focus score
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> Show profile in swipe feed
+            </label>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>🔔 Notification Settings</h3>
+    <div class="grid">
+        <div>
+            <h4>Email Notifications</h4>
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> New matches
+            </label>
+            
+            {% if session.role == 'student' %}
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> TA shared new notes
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" style="margin-right: 0.5rem;"> Live class invitations
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> Study streak reminders
+            </label>
+            {% endif %}
+            
+            {% if session.role == 'ta' %}
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> New match requests
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" style="margin-right: 0.5rem;"> Student session summaries
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> New ratings and reviews
+            </label>
+            {% endif %}
+        </div>
+        
+        <div>
+            <h4>Push Notifications</h4>
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> Timer reminders
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" style="margin-right: 0.5rem;"> Break time alerts
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> Important announcements
+            </label>
+            
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Quiet Hours:</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="time" value="22:00" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <span>to</span>
+                    <input type="time" value="08:00" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🎨 Appearance & Accessibility</h3>
+    <div class="grid">
+        <div>
+            <h4>Theme Settings</h4>
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Theme:</label>
+                <select style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <option>Light Theme</option>
+                    <option>Dark Theme</option>
+                    <option>Auto (System)</option>
+                </select>
+            </div>
+            
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Accent Color:</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <div style="width: 30px; height: 30px; background: #3498db; border-radius: 50%; cursor: pointer; border: 3px solid #3498db;"></div>
+                    <div style="width: 30px; height: 30px; background: #27ae60; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                    <div style="width: 30px; height: 30px; background: #e74c3c; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                    <div style="width: 30px; height: 30px; background: #f39c12; border-radius: 50%; cursor: pointer; border: 3px solid transparent;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <h4>Accessibility</h4>
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" style="margin-right: 0.5rem;"> High contrast mode
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" style="margin-right: 0.5rem;"> Large text
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" style="margin-right: 0.5rem;"> Reduce animations
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" style="margin-right: 0.5rem;"> Screen reader support
+            </label>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📊 Privacy & Data</h3>
+    <div style="display: grid; gap: 1rem;">
+        <div>
+            <h4>Data Collection</h4>
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> Allow analytics data collection
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" checked style="margin-right: 0.5rem;"> Share usage data for improvements
+            </label>
+            
+            <label style="display: flex; align-items: center; margin: 0.5rem 0;">
+                <input type="checkbox" style="margin-right: 0.5rem;"> Participate in research studies
+            </label>
+        </div>
+        
+        <div>
+            <h4>Account Actions</h4>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn" onclick="exportData()">📥 Export My Data</button>
+                <button class="btn" onclick="deleteAccount()">🗑️ Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <button class="btn btn-success" onclick="saveAllSettings()">💾 Save All Settings</button>
+            <button class="btn" onclick="resetToDefaults()">🔄 Reset to Defaults</button>
+        </div>
+        <div style="font-size: 0.8rem; color: #666;">
+            Last saved: Never
+        </div>
+    </div>
+</div>
+
+<script>
+let settings = {
+    twoFactor: false,
+    timer: 'Pomodoro Timer',
+    duration: 25,
+    sound: 'No Sound'
+};
+
+function toggleSetting(checkbox, setting) {
+    settings[setting] = checkbox.checked;
+    showNotification(`${setting} ${checkbox.checked ? 'enabled' : 'disabled'}`);
+}
+
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #27ae60; color: white; padding: 1rem; border-radius: 8px; z-index: 1001;';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+function saveProfile() {
+    showNotification('Profile saved successfully!');
+}
+
+function changePassword() {
+    showNotification('Password changed successfully!');
+}
+
+function saveAllSettings() {
+    showNotification('All settings saved successfully!');
+}
+
+function resetToDefaults() {
+    if (confirm('Reset all settings to default values? This cannot be undone.')) {
+        showNotification('Settings reset to defaults!');
+    }
+}
+
+function exportData() {
+    showNotification('Your data export will be emailed to you within 24 hours.');
+}
+
+function deleteAccount() {
+    const confirmation = prompt('Type "DELETE" to confirm account deletion:');
+    if (confirmation === 'DELETE') {
+        showNotification('Account deletion request submitted.');
+    }
+}
+
+// Make dropdowns and inputs functional
+document.addEventListener('DOMContentLoaded', function() {
+    const selects = document.querySelectorAll('select');
+    const inputs = document.querySelectorAll('input[type="number"]');
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            showNotification(`Changed to: ${this.value}`);
+        });
+    });
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            showNotification(`Value set to: ${this.value}`);
+        });
+    });
+    
+    checkboxes.forEach(checkbox => {
+        if (!checkbox.onchange) {
+            checkbox.addEventListener('change', function() {
+                showNotification(`Setting ${this.checked ? 'enabled' : 'disabled'}`);
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

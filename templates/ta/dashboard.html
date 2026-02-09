@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}TA Dashboard{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Welcome, {{ session.name }}! 🎓</h1>
+    <p>Ready to inspire and guide your students today?</p>
+</div>
+
+<div class="card">
+    <h2>Your Teaching Statistics</h2>
+    <div class="stats">
+        <div class="stat-item">
+            <h3>{{ ta_stats.active_students }}</h3>
+            <p>Active Students</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ ta_stats.pending_requests }}</h3>
+            <p>Pending Requests</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ ta_stats.hours_taught }}</h3>
+            <p>Hours Taught</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ ta_stats.rating }}⭐</h3>
+            <p>Average Rating</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>👥 Student Matches</h3>
+        <p>Manage your student connections</p>
+        <a href="/ta/matches" class="btn">View Matches</a>
+        {% if ta_stats.pending_requests > 0 %}
+        <span style="background: #e74c3c; color: white; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.8rem; margin-left: 0.5rem;">
+            {{ ta_stats.pending_requests }} pending
+        </span>
+        {% endif %}
+    </div>
+    
+    <div class="card">
+        <h3>🎓 Live Classes</h3>
+        <p>Start or join live teaching sessions</p>
+        <a href="/ta/live-class" class="btn">Manage Classes</a>
+    </div>
+    
+    <div class="card">
+        <h3>📝 Study Materials</h3>
+        <p>Create and share notes with students</p>
+        <a href="/ta/notes" class="btn">Manage Notes</a>
+    </div>
+    
+    <div class="card">
+        <h3>📊 Performance Analytics</h3>
+        <p>View detailed teaching statistics</p>
+        <a href="/ta/analytics" class="btn">View Analytics</a>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📅 Today's Schedule</h3>
+    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <strong>Calculus Review Session</strong>
+            <span style="color: #3498db;">2:00 PM - 3:00 PM</span>
+        </div>
+        <p style="margin: 0; color: #666;">with Sarah, Mike, and 3 others</p>
+    </div>
+    
+    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <strong>Physics Problem Solving</strong>
+            <span style="color: #3498db;">4:00 PM - 5:30 PM</span>
+        </div>
+        <p style="margin: 0; color: #666;">with Emma and John</p>
+    </div>
+    
+    <button class="btn" onclick="addSession()">+ Add New Session</button>
+</div>
+
+<div class="card">
+    <h3>🔔 Recent Activity</h3>
+    <div style="max-height: 300px; overflow-y: auto;">
+        <div style="padding: 0.75rem; border-bottom: 1px solid #eee;">
+            <p style="margin: 0;"><strong>New match request</strong> from Alex Johnson</p>
+            <p style="margin: 0; font-size: 0.8rem; color: #666;">2 minutes ago</p>
+        </div>
+        
+        <div style="padding: 0.75rem; border-bottom: 1px solid #eee;">
+            <p style="margin: 0;"><strong>Session completed</strong> - Calculus Review</p>
+            <p style="margin: 0; font-size: 0.8rem; color: #666;">1 hour ago</p>
+        </div>
+        
+        <div style="padding: 0.75rem; border-bottom: 1px solid #eee;">
+            <p style="margin: 0;"><strong>New rating received</strong> - 5 stars from Emma</p>
+            <p style="margin: 0; font-size: 0.8rem; color: #666;">3 hours ago</p>
+        </div>
+        
+        <div style="padding: 0.75rem; border-bottom: 1px solid #eee;">
+            <p style="margin: 0;"><strong>Note uploaded</strong> - "Advanced Derivatives"</p>
+            <p style="margin: 0; font-size: 0.8rem; color: #666;">Yesterday</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🎯 Quick Actions</h3>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn btn-success" onclick="startLiveSession()">Start Live Session</button>
+        <button class="btn" onclick="createNote()">Create New Note</button>
+        <button class="btn" onclick="sendMessage()">Message Students</button>
+        <button class="btn" onclick="updateAvailability()">Update Availability</button>
+    </div>
+</div>
+
+<script>
+function addSession() {
+    alert('Add new session feature coming soon!');
+}
+
+function startLiveSession() {
+    if (confirm('Start a new live session now?')) {
+        window.location.href = '/ta/live-class';
+    }
+}
+
+function createNote() {
+    window.location.href = '/ta/notes';
+}
+
+function sendMessage() {
+    alert('Messaging feature coming soon!');
+}
+
+function updateAvailability() {
+    alert('Availability update feature coming soon!');
+}
+</script>
+{% endblock %}

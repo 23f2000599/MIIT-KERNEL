@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Study Stats{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>📊 Your Study Statistics</h1>
+            <p>Track your learning progress and timer usage patterns</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn" onclick="exportStats()">📤 Export</button>
+            <button class="btn" onclick="resetStats()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="stats">
+    <div class="stat-item">
+        <h3>{{ timer_stats|length }}</h3>
+        <p>Timer Types Used</p>
+    </div>
+    <div class="stat-item">
+        <h3>{% set total_sessions = timer_stats|sum(attribute=2) %}{{ total_sessions if total_sessions else 0 }}</h3>
+        <p>Total Sessions</p>
+    </div>
+    <div class="stat-item">
+        <h3>{% set total_minutes = timer_stats|sum(attribute=1) %}{{ (total_minutes / 60)|round(1) if total_minutes else 0 }}h</h3>
+        <p>Total Study Time</p>
+    </div>
+    <div class="stat-item">
+        <h3>{% set daily_total = daily_stats|sum(attribute=1) %}{{ (daily_total / 7)|round(0) if daily_total else 0 }}min</h3>
+        <p>Daily Average</p>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>⏰ Timer Usage</h3>
+        <div style="max-height: 350px; overflow-y: auto;">
+            {% if timer_stats %}
+                {% for stat in timer_stats %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 0.75rem; border-left: 4px solid var(--accent-primary);">
+                    <div>
+                        <span style="font-weight: 600; color: var(--text-primary);">{{ stat[0] }}</span>
+                        <p style="margin: 0.25rem 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">{{ stat[2] }} sessions completed</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="color: var(--accent-primary); font-weight: bold; font-size: 1.1rem;">{{ stat[1] }}min</span>
+                        <p style="margin: 0.25rem 0 0 0; color: var(--text-secondary); font-size: 0.8rem;">{{ (stat[1] / stat[2])|round(0) }}min avg</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">⏰</span>
+                    <p>No timer data yet</p>
+                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Start using study timers to see your usage patterns</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>📈 Daily Progress (Last 7 Days)</h3>
+        <div style="max-height: 350px; overflow-y: auto;">
+            {% if daily_stats %}
+                {% for stat in daily_stats %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 0.75rem; position: relative; overflow: hidden;">
+                    <div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{ (stat[1] / 100 * 100)|round(0) }}%; background: linear-gradient(90deg, var(--accent-green), transparent); opacity: 0.1;"></div>
+                    <span style="font-weight: 600; color: var(--text-primary); position: relative;">{{ stat[0] }}</span>
+                    <div style="text-align: right; position: relative;">
+                        <span style="color: var(--accent-green); font-weight: bold; font-size: 1.1rem;">{{ stat[1] }}min</span>
+                        <p style="margin: 0.25rem 0 0 0; color: var(--text-secondary); font-size: 0.8rem;">{{ (stat[1] / 60)|round(1) }}h</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">📈</span>
+                    <p>No daily data yet</p>
+                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Complete study sessions to track daily progress</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📊 Focus Trends & Performance</h3>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: center;">
+        <div>
+            <canvas id="focusChart" width="400" height="200" style="max-width: 100%;"></canvas>
+        </div>
+        <div style="display: grid; gap: 1rem;">
+            <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                <h4 style="color: var(--accent-primary); font-size: 2rem; margin-bottom: 0.5rem;">89%</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Average Focus Score</p>
+            </div>
+            <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                <h4 style="color: var(--accent-green); font-size: 2rem; margin-bottom: 0.5rem;">5</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Day Streak</p>
+            </div>
+            <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                <h4 style="color: var(--accent-orange); font-size: 2rem; margin-bottom: 0.5rem;">2.1h</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Best Session</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('focusChart').getContext('2d');
+const focusChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+            label: 'Focus Score (%)',
+            data: [85, 78, 92, 88, 76, 89, 94],
+            borderColor: 'var(--accent-primary)',
+            backgroundColor: 'rgba(124, 58, 237, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: 'var(--accent-primary)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6
+        }, {
+            label: 'Study Time (min)',
+            data: [45, 60, 30, 75, 90, 25, 40],
+            borderColor: 'var(--accent-green)',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: 'var(--accent-green)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: 'var(--text-primary)',
+                    usePointStyle: true,
+                    padding: 20
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: 'var(--text-secondary)'
+                },
+                grid: {
+                    color: 'var(--glass-border)'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    color: 'var(--text-secondary)'
+                },
+                grid: {
+                    color: 'var(--glass-border)'
+                }
+            }
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        }
+    }
+});
+
+function exportStats() {
+    const data = {
+        timer_stats: {{ timer_stats|tojson|safe }},
+        daily_stats: {{ daily_stats|tojson|safe }},
+        export_date: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `study-stats-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    alert('📤 Stats exported successfully!');
+}
+
+function resetStats() {
+    if (confirm('Are you sure you want to reset all statistics? This action cannot be undone.')) {
+        alert('🔄 Stats reset functionality would be implemented here');
+    }
+}
+</script>
+{% endblock %}

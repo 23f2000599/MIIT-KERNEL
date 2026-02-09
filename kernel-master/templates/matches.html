@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{% if session.user_role == 'student' %}Your Teaching Assistants{% else %}Your Students{% endif %}</h2>
+
+<div class="row">
+    {% if matches %}
+        {% for match in matches %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="avatar-circle">{{ match[4][0].upper() if match[4] and match[4]|length > 0 else 'U' }}</div>
+                    </div>
+                    <h5 class="text-center">{{ match[4] if match[4] else 'Unknown User' }}</h5>
+                    <p class="text-center text-muted">{{ match[5] if match[5] else 'No email' }}</p>
+                    
+                    <div class="match-status mb-3">
+                        {% if match[3] == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                        {% elif match[3] == 'matched' %}
+                            <span class="badge bg-success">Matched</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ match[3] }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if session.user_role == 'ta' and match[3] == 'pending' %}
+                    <div class="text-center">
+                        <form method="POST" action="{{ url_for('update_match', match_id=match[0], status='matched') }}" style="display: inline;">
+                            <button type="submit" class="btn btn-success btn-sm me-2">Accept</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('update_match', match_id=match[0], status='declined') }}" style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm">Decline</button>
+                        </form>
+                    </div>
+                    {% elif match[3] == 'matched' %}
+                    <div class="text-center">
+                        <button class="btn btn-primary btn-sm me-2">Start Session</button>
+                        <button class="btn btn-info btn-sm">View Notes</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12 text-center">
+            <h4>No matches yet</h4>
+            {% if session.user_role == 'student' %}
+                <p>Start swiping to find your perfect TA!</p>
+                <a href="{{ url_for('swipe') }}" class="btn btn-primary">Find TAs</a>
+            {% else %}
+                <p>Students will find you soon!</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function updateMatch(matchId, status) {
+    // This would typically make an AJAX call to update match status
+    alert('Match ' + status + '!');
+    location.reload();
+}
+</script>
+
+<style>
+.avatar-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0 auto;
+}
+</style>
+{% endblock %}

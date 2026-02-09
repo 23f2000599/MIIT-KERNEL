@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Analytics{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Platform Analytics 📊</h1>
+    <p>Comprehensive insights into platform performance and user behavior</p>
+</div>
+
+<div class="card">
+    <h3>💕 Matching System Performance</h3>
+    <div class="stats">
+        <div class="stat-item">
+            <h3>{{ match_stats.total_matches }}</h3>
+            <p>Total Matches</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ match_stats.pending }}</h3>
+            <p>Pending</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ match_stats.accepted }}</h3>
+            <p>Accepted</p>
+        </div>
+        <div class="stat-item">
+            <h3>{% if match_stats.total_matches > 0 %}{{ "%.0f"|format((match_stats.accepted / match_stats.total_matches) * 100) }}%{% else %}0%{% endif %}</h3>
+            <p>Success Rate</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>📈 User Growth</h3>
+        <div style="height: 250px; background: #f8f9fa; border-radius: 8px; display: flex; align-items: end; justify-content: space-around; padding: 2rem;">
+            <div style="background: #3498db; width: 25px; height: 20%; border-radius: 4px 4px 0 0; position: relative;">
+                <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">Jan</span>
+                <span style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: #3498db;">5</span>
+            </div>
+            <div style="background: #3498db; width: 25px; height: 35%; border-radius: 4px 4px 0 0; position: relative;">
+                <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">Feb</span>
+                <span style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: #3498db;">8</span>
+            </div>
+            <div style="background: #3498db; width: 25px; height: 60%; border-radius: 4px 4px 0 0; position: relative;">
+                <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">Mar</span>
+                <span style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: #3498db;">15</span>
+            </div>
+            <div style="background: #3498db; width: 25px; height: 85%; border-radius: 4px 4px 0 0; position: relative;">
+                <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">Apr</span>
+                <span style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: #3498db;">25</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>⏰ Study Time Distribution</h3>
+        <div style="margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Pomodoro Timer</span>
+                <span>45%</span>
+            </div>
+            <div style="background: #ecf0f1; height: 8px; border-radius: 4px;">
+                <div style="background: #3498db; height: 100%; width: 45%; border-radius: 4px;"></div>
+            </div>
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Deep Focus Timer</span>
+                <span>30%</span>
+            </div>
+            <div style="background: #ecf0f1; height: 8px; border-radius: 4px;">
+                <div style="background: #27ae60; height: 100%; width: 30%; border-radius: 4px;"></div>
+            </div>
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Other Timers</span>
+                <span>25%</span>
+            </div>
+            <div style="background: #ecf0f1; height: 8px; border-radius: 4px;">
+                <div style="background: #f39c12; height: 100%; width: 25%; border-radius: 4px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🎯 User Engagement Metrics</h3>
+    <div class="grid">
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <h3 style="color: #3498db;">78%</h3>
+            <p>Daily Active Users</p>
+            <p style="font-size: 0.8rem; color: #666;">18 of 23 users</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <h3 style="color: #27ae60;">2.5h</h3>
+            <p>Avg Session Duration</p>
+            <p style="font-size: 0.8rem; color: #666;">+15% from last week</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <h3 style="color: #e74c3c;">12%</h3>
+            <p>Churn Rate</p>
+            <p style="font-size: 0.8rem; color: #666;">3 users this month</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <h3 style="color: #f39c12;">4.6⭐</h3>
+            <p>Platform Rating</p>
+            <p style="font-size: 0.8rem; color: #666;">Based on 45 reviews</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📚 Content Analytics</h3>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa;">
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6;">Content Type</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6;">Total Items</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6;">Views</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6;">Downloads</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6;">Avg Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">Study Notes</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">45</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">1,234</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">567</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">4.5⭐</td>
+                </tr>
+                <tr>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">Exam Materials</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">23</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">890</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">445</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">4.7⭐</td>
+                </tr>
+                <tr>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">Live Sessions</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">12</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">345</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">-</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">4.8⭐</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>🔥 Top Performing TAs</h3>
+        <div style="max-height: 300px; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid #eee;">
+                <div style="display: flex; align-items: center;">
+                    <img src="https://via.placeholder.com/40x40/27ae60/ffffff?text=S" style="border-radius: 50%; margin-right: 0.75rem;">
+                    <div>
+                        <strong>Sarah Johnson</strong>
+                        <div style="font-size: 0.8rem; color: #666;">Mathematics</div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div>4.9⭐</div>
+                    <div style="font-size: 0.8rem; color: #666;">12 students</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid #eee;">
+                <div style="display: flex; align-items: center;">
+                    <img src="https://via.placeholder.com/40x40/3498db/ffffff?text=M" style="border-radius: 50%; margin-right: 0.75rem;">
+                    <div>
+                        <strong>Mike Chen</strong>
+                        <div style="font-size: 0.8rem; color: #666;">Physics</div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div>4.8⭐</div>
+                    <div style="font-size: 0.8rem; color: #666;">8 students</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid #eee;">
+                <div style="display: flex; align-items: center;">
+                    <img src="https://via.placeholder.com/40x40/e74c3c/ffffff?text=E" style="border-radius: 50%; margin-right: 0.75rem;">
+                    <div>
+                        <strong>Emma Lopez</strong>
+                        <div style="font-size: 0.8rem; color: #666;">Chemistry</div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div>4.7⭐</div>
+                    <div style="font-size: 0.8rem; color: #666;">10 students</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>📊 System Performance</h3>
+        <div style="margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Server Uptime</span>
+                <span style="color: #27ae60;">99.8%</span>
+            </div>
+            <div style="background: #ecf0f1; height: 8px; border-radius: 4px;">
+                <div style="background: #27ae60; height: 100%; width: 99.8%; border-radius: 4px;"></div>
+            </div>
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>API Response Time</span>
+                <span style="color: #f39c12;">450ms</span>
+            </div>
+            <div style="background: #ecf0f1; height: 8px; border-radius: 4px;">
+                <div style="background: #f39c12; height: 100%; width: 45%; border-radius: 4px;"></div>
+            </div>
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Database Performance</span>
+                <span style="color: #27ae60;">Excellent</span>
+            </div>
+            <div style="background: #ecf0f1; height: 8px; border-radius: 4px;">
+                <div style="background: #27ae60; height: 100%; width: 85%; border-radius: 4px;"></div>
+            </div>
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Storage Usage</span>
+                <span style="color: #3498db;">65%</span>
+            </div>
+            <div style="background: #ecf0f1; height: 8px; border-radius: 4px;">
+                <div style="background: #3498db; height: 100%; width: 65%; border-radius: 4px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🎯 Key Performance Indicators</h3>
+    <div class="grid">
+        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; text-align: center;">
+            <h3 style="color: #27ae60;">↗️ 23%</h3>
+            <p>User Growth (Monthly)</p>
+        </div>
+        
+        <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; text-align: center;">
+            <h3 style="color: #3498db;">↗️ 15%</h3>
+            <p>Session Duration</p>
+        </div>
+        
+        <div style="background: #fff3e0; padding: 1rem; border-radius: 8px; text-align: center;">
+            <h3 style="color: #f39c12;">↗️ 8%</h3>
+            <p>Match Success Rate</p>
+        </div>
+        
+        <div style="background: #fce4ec; padding: 1rem; border-radius: 8px; text-align: center;">
+            <h3 style="color: #e74c3c;">↘️ 5%</h3>
+            <p>Support Tickets</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📋 Export & Reports</h3>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn" onclick="exportData('users')">📊 Export User Data</button>
+        <button class="btn" onclick="exportData('sessions')">⏰ Export Session Data</button>
+        <button class="btn" onclick="exportData('matches')">💕 Export Match Data</button>
+        <button class="btn" onclick="generateReport()">📄 Generate Full Report</button>
+    </div>
+</div>
+
+<script>
+function exportData(type) {
+    alert(`Exporting ${type} data... (Feature coming soon!)`);
+}
+
+function generateReport() {
+    if (confirm('Generate comprehensive platform report? This may take a few minutes.')) {
+        alert('Generating report... You will receive an email when it\'s ready. (Feature coming soon!)');
+    }
+}
+
+// Auto-refresh analytics every 5 minutes
+setInterval(() => {
+    console.log('Refreshing analytics data...');
+}, 300000);
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>User Management</h2>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <h5>All Users</h5>
+        <div>
+            <button class="btn btn-success btn-sm">Export Data</button>
+            <button class="btn btn-primary btn-sm">Add User</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Created</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user[0] }}</td>
+                        <td>{{ user[4] }}</td>
+                        <td>{{ user[1] }}</td>
+                        <td>
+                            <span class="badge bg-{% if user[3] == 'admin' %}danger{% elif user[3] == 'ta' %}warning{% else %}primary{% endif %}">
+                                {{ user[3].upper() }}
+                            </span>
+                        </td>
+                        <td>{{ user[5][:10] }}</td>
+                        <td><span class="badge bg-success">Active</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editUser({{ user[0] }})">Edit</button>
+                                <button class="btn btn-outline-warning" onclick="suspendUser({{ user[0] }})">Suspend</button>
+                                <button class="btn btn-outline-danger" onclick="deleteUser({{ user[0] }})">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>Total Students</h5>
+                <h3 class="text-primary">{{ users|selectattr('3', 'equalto', 'student')|list|length }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>Total TAs</h5>
+                <h3 class="text-warning">{{ users|selectattr('3', 'equalto', 'ta')|list|length }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>Total Admins</h5>
+                <h3 class="text-danger">{{ users|selectattr('3', 'equalto', 'admin')|list|length }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function editUser(userId) {
+    alert('Edit user ' + userId + ' - Feature coming soon!');
+}
+
+function suspendUser(userId) {
+    if (confirm('Are you sure you want to suspend this user?')) {
+        alert('User suspended - Feature coming soon!');
+    }
+}
+
+function deleteUser(userId) {
+    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        alert('User deleted - Feature coming soon!');
+    }
+}
+</script>
+{% endblock %}

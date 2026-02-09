@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Welcome back, {{ session.name }}! 🎓</h1>
+    <p>Ready to focus and achieve your goals today?</p>
+</div>
+
+<div class="card">
+    <h2>Your Study Statistics</h2>
+    <div class="stats">
+        <div class="stat-item">
+            <h3>{{ stats.total_hours }}</h3>
+            <p>Total Hours</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ stats.daily_focus }}</h3>
+            <p>Today's Focus</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ stats.active_streak }}</h3>
+            <p>Current Streak</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ stats.last_timer }}</h3>
+            <p>Last Timer Used</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>🎯 Quick Start Timer</h3>
+        <p>Jump right into your study session</p>
+        <a href="/student/timers" class="btn">Start Studying</a>
+    </div>
+    
+    <div class="card">
+        <h3>💕 Find Your Perfect TA</h3>
+        <p>Swipe to match with teaching assistants</p>
+        <a href="/student/swipe" class="btn">Start Swiping</a>
+    </div>
+    
+    <div class="card">
+        <h3>📚 Live Classes</h3>
+        <p>Join ongoing live learning sessions</p>
+        <a href="/student/live-class" class="btn">Join Class</a>
+    </div>
+    
+    <div class="card">
+        <h3>📝 Study Notes</h3>
+        <p>Access notes shared by your TAs</p>
+        <a href="/student/notes" class="btn">View Notes</a>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🔥 Today's Focus Challenge</h3>
+    <p>Complete a 2-hour deep focus session to maintain your streak!</p>
+    <div style="background: #ecf0f1; height: 20px; border-radius: 10px; margin: 1rem 0;">
+        <div style="background: #3498db; height: 100%; width: 60%; border-radius: 10px;"></div>
+    </div>
+    <p>1.2 / 2.0 hours completed</p>
+</div>
+{% endblock %}

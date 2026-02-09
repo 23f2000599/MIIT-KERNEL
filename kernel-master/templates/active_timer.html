@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center">
+    <h2>{{ timer_type }} Session</h2>
+    <div class="timer-display my-5">
+        <h1 id="timer" class="display-1">{{ duration }}:00</h1>
+    </div>
+    
+    <div class="focus-controls mb-4">
+        <button class="btn btn-success me-2" onclick="playAmbientSound()">🎵 Focus Sounds</button>
+        <button class="btn btn-danger" onclick="emergencyExit()">⚠️ Emergency Exit</button>
+    </div>
+    
+    <div class="progress mb-4">
+        <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+    </div>
+    
+    <form id="complete-form" method="POST" action="{{ url_for('complete_session') }}" style="display: none;">
+        <input type="hidden" id="completed-time" name="completed_time" value="0">
+        <input type="hidden" name="focus_score" value="85">
+    </form>
+</div>
+
+<script>
+let duration = {{ duration }} * 60; // Convert to seconds
+let startTime = Date.now();
+let timerInterval;
+
+function startTimer() {
+    timerInterval = setInterval(function() {
+        let elapsed = Math.floor((Date.now() - startTime) / 1000);
+        let remaining = Math.max(0, duration - elapsed);
+        
+        let minutes = Math.floor(remaining / 60);
+        let seconds = remaining % 60;
+        
+        document.getElementById('timer').textContent = 
+            minutes.toString().padStart(2, '0') + ':' + 
+            seconds.toString().padStart(2, '0');
+        
+        let progress = ((duration - remaining) / duration) * 100;
+        document.getElementById('progress-bar').style.width = progress + '%';
+        
+        if (remaining === 0) {
+            completeSession(duration / 60);
+        }
+    }, 1000);
+}
+
+function completeSession(completedMinutes) {
+    clearInterval(timerInterval);
+    document.getElementById('completed-time').value = completedMinutes;
+    document.getElementById('complete-form').submit();
+}
+
+function emergencyExit() {
+    if (confirm('Are you sure you want to exit? This will log the interruption.')) {
+        let elapsed = Math.floor((Date.now() - startTime) / 1000);
+        completeSession(elapsed / 60);
+    }
+}
+
+function playAmbientSound() {
+    alert('Ambient sounds feature coming soon!');
+}
+
+// Start the timer when page loads
+startTimer();
+</script>
+{% endblock %}

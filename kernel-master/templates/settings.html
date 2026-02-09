@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Settings</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Profile Settings</h5>
+            </div>
+            <div class="card-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="name" value="{{ session.user_name }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" value="user@example.com" readonly>
+                    </div>
+                    {% if session.user_role == 'student' %}
+                    <div class="mb-3">
+                        <label for="study-goal" class="form-label">Daily Study Goal (minutes)</label>
+                        <input type="number" class="form-control" id="study-goal" value="120">
+                    </div>
+                    <div class="mb-3">
+                        <label for="preferred-timer" class="form-label">Preferred Timer</label>
+                        <select class="form-control" id="preferred-timer">
+                            <option>Pomodoro</option>
+                            <option>Deep Focus</option>
+                            <option>52-17</option>
+                        </select>
+                    </div>
+                    {% elif session.user_role == 'ta' %}
+                    <div class="mb-3">
+                        <label for="expertise" class="form-label">Expertise Areas</label>
+                        <input type="text" class="form-control" id="expertise" value="Mathematics, Physics, Computer Science">
+                    </div>
+                    <div class="mb-3">
+                        <label for="availability" class="form-label">Availability</label>
+                        <textarea class="form-control" id="availability" rows="3">Monday-Friday: 2PM-8PM
+Saturday: 10AM-4PM</textarea>
+                    </div>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Notification Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="email-notifications" checked>
+                    <label class="form-check-label" for="email-notifications">
+                        Email Notifications
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="timer-reminders" checked>
+                    <label class="form-check-label" for="timer-reminders">
+                        Timer Reminders
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="match-notifications" checked>
+                    <label class="form-check-label" for="match-notifications">
+                        Match Notifications
+                    </label>
+                </div>
+                {% if session.user_role == 'student' %}
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="focus-lock" checked>
+                    <label class="form-check-label" for="focus-lock">
+                        Auto Focus Lock
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Account Actions</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-warning w-100 mb-2">Change Password</button>
+                <button class="btn btn-danger w-100">Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

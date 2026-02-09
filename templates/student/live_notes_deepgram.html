@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Live Transcription{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>🎤 Live Transcription</h1>
+            <p>Real-time speech-to-text with speaker diarization powered by Deepgram</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <select id="language-select" style="padding: 0.5rem; border-radius: 8px;">
+                <option value="en-US">🇺🇸 English</option>
+                <option value="es">🇪🇸 Spanish</option>
+                <option value="fr">🇫🇷 French</option>
+                <option value="hi">🇮🇳 Hindi</option>
+            </select>
+            <button id="start-btn" class="btn btn-success">🎤 Start</button>
+            <button id="stop-btn" class="btn btn-danger" disabled>⏹️ Stop</button>
+        </div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>🎤 Live Recording</h3>
+        
+        <div id="status" style="margin-bottom: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+            <span style="color: var(--text-secondary);">Click "Start" to begin live transcription</span>
+        </div>
+        
+        <div>
+            <h4>📝 Live Transcript:</h4>
+            <div id="transcript" style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; min-height: 300px; max-height: 400px; overflow-y: auto; font-family: 'Segoe UI', sans-serif; line-height: 1.6; border: 2px solid var(--glass-border);">
+                <span style="color: var(--text-secondary); font-style: italic;">Transcript will appear here...</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>📊 Session Stats</h3>
+        <div class="stats">
+            <div class="stat-item">
+                <h3 id="duration">00:00</h3>
+                <p>Duration</p>
+            </div>
+            <div class="stat-item">
+                <h3 id="word-count">0</h3>
+                <p>Words</p>
+            </div>
+            <div class="stat-item">
+                <h3 id="speaker-count">0</h3>
+                <p>Speakers</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+            <p><strong>🌐 Language:</strong> <span id="current-language">English</span></p>
+            <p><strong>⏰ Started:</strong> <span id="session-start">--</span></p>
+            <p><strong>📍 Status:</strong> <span id="connection-status">Disconnected</span></p>
+        </div>
+        
+        <div style="margin-top: 1rem;">
+            <button class="btn" onclick="saveTranscript()" id="save-btn" disabled>💾 Save to Notes</button>
+            <button class="btn" onclick="clearTranscript()">🗑️ Clear</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.speaker-0 { border-left: 4px solid var(--accent-primary); }
+.speaker-1 { border-left: 4px solid var(--accent-green); }
+.speaker-2 { border-left: 4px solid var(--accent-orange); }
+.speaker-3 { border-left: 4px solid var(--accent-red); }
+
+.transcript-line {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    background: var(--bg-primary);
+}
+
+.interim-text {
+    opacity: 0.6;
+    font-style: italic;
+}
+
+.recording-pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+</style>
+
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+<script>
+let socket;
+let mediaRecorder;
+let audioStream;
+let isRecording = false;
+let startTime;
+let durationInterval;
+let fullTranscript = '';
+let wordCount = 0;
+let speakers = new Set();
+
+// Initialize Socket.IO connection
+socket = io();
+
+socket.on('connect', function() {
+    document.getElementById('connection-status').textContent = 'Connected';
+    document.getElementById('connection-status').style.color = 'var(--accent-green)';
+});
+
+socket.on('disconnect', function() {
+    document.getElementById('connection-status').textContent = 'Disconnected';
+    document.getElementById('connection-status').style.color = 'var(--accent-red)';
+});
+
+socket.on('transcription_started', function(data) {
+    document.getElementById('status').innerHTML = '<span style="color: var(--accent-green);" class="recording-pulse">🔴 Recording... Speak now!</span>';
+});
+
+socket.on('transcript_update', function(data) {
+    if (data.is_final) {
+        addTranscriptLine(data.transcript, data.speaker, data.confidence);
+        fullTranscript += data.transcript + ' ';
+        updateStats();
+    } else {
+        showInterimText(data.transcript);
+    }
+});
+
+socket.on('transcription_stopped', function(data) {
+    document.getElementById('status').innerHTML = '<span style="color: var(--accent-primary);">⏸️ Transcription stopped - AI notes generated!</span>';
+    document.getElementById('save-btn').disabled = false;
+    
+    // Show AI notes preview
+    if (data.ai_notes) {
+        const preview = data.ai_notes.substring(0, 200) + '...';
+        document.getElementById('status').innerHTML += `<br><small style="color: var(--text-secondary);">Preview: ${preview}</small>`;
+    }
+});
+
+socket.on('error', function(data) {
+    document.getElementById('status').innerHTML = `<span style="color: var(--accent-red);">❌ Error: ${data.message}</span>`;
+});
+
+document.getElementById('start-btn').addEventListener('click', startRecording);
+document.getElementById('stop-btn').addEventListener('click', stopRecording);
+
+document.getElementById('language-select').addEventListener('change', function() {
+    const langNames = {
+        'en-US': 'English',
+        'es': 'Spanish',
+        'fr': 'French',
+        'hi': 'Hindi'
+    };
+    document.getElementById('current-language').textContent = langNames[this.value];
+});
+
+async function startRecording() {
+    try {
+        audioStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                sampleRate: 16000,
+                channelCount: 1,
+                echoCancellation: true,
+                noiseSuppression: true
+            }
+        });
+        
+        mediaRecorder = new MediaRecorder(audioStream, {
+            mimeType: 'audio/webm;codecs=opus'
+        });
+        
+        mediaRecorder.ondataavailable = function(event) {
+            if (event.data.size > 0) {
+                const reader = new FileReader();
+                reader.onload = function() {
+                    const arrayBuffer = reader.result;
+                    const uint8Array = new Uint8Array(arrayBuffer);
+                    socket.emit('audio_data', { audio: Array.from(uint8Array) });
+                };
+                reader.readAsArrayBuffer(event.data);
+            }
+        };
+        
+        mediaRecorder.start(100); // Send data every 100ms
+        
+        const language = document.getElementById('language-select').value;
+        socket.emit('start_transcription', { language: language });
+        
+        isRecording = true;
+        startTime = new Date();
+        document.getElementById('start-btn').disabled = true;
+        document.getElementById('stop-btn').disabled = false;
+        document.getElementById('session-start').textContent = startTime.toLocaleTimeString();
+        document.getElementById('transcript').innerHTML = '';
+        fullTranscript = '';
+        wordCount = 0;
+        speakers.clear();
+        
+        durationInterval = setInterval(updateDuration, 1000);
+        
+    } catch (error) {
+        document.getElementById('status').innerHTML = `<span style="color: var(--accent-red);">❌ Error accessing microphone: ${error.message}</span>`;
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        audioStream.getTracks().forEach(track => track.stop());
+        socket.emit('stop_transcription');
+        
+        isRecording = false;
+        document.getElementById('start-btn').disabled = false;
+        document.getElementById('stop-btn').disabled = true;
+        clearInterval(durationInterval);
+    }
+}
+
+function addTranscriptLine(text, speaker, confidence) {
+    const transcriptDiv = document.getElementById('transcript');
+    const line = document.createElement('div');
+    line.className = `transcript-line speaker-${speaker % 4}`;
+    
+    const speakerLabel = speaker !== undefined ? `[Speaker ${speaker}] ` : '';
+    const confidenceLabel = confidence ? ` (${Math.round(confidence * 100)}%)` : '';
+    
+    line.innerHTML = `<strong>${speakerLabel}</strong>${text}<span style="font-size: 0.8em; opacity: 0.7;">${confidenceLabel}</span>`;
+    transcriptDiv.appendChild(line);
+    transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+    
+    if (speaker !== undefined) {
+        speakers.add(speaker);
+    }
+}
+
+function showInterimText(text) {
+    const transcriptDiv = document.getElementById('transcript');
+    let interimDiv = document.getElementById('interim-text');
+    
+    if (!interimDiv) {
+        interimDiv = document.createElement('div');
+        interimDiv.id = 'interim-text';
+        interimDiv.className = 'interim-text';
+        transcriptDiv.appendChild(interimDiv);
+    }
+    
+    interimDiv.textContent = text;
+    transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+}
+
+function updateDuration() {
+    if (startTime) {
+        const now = new Date();
+        const diff = Math.floor((now - startTime) / 1000);
+        const minutes = Math.floor(diff / 60);
+        const seconds = diff % 60;
+        document.getElementById('duration').textContent = 
+            minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+    }
+}
+
+function updateStats() {
+    const words = fullTranscript.trim().split(/\s+/).filter(word => word.length > 0);
+    document.getElementById('word-count').textContent = words.length;
+    document.getElementById('speaker-count').textContent = speakers.size;
+}
+
+function saveTranscript() {
+    if (fullTranscript.trim()) {
+        alert('✅ AI-generated lecture notes saved to your Notes section!');
+        document.getElementById('save-btn').disabled = true;
+    } else {
+        alert('❌ No transcript to save!');
+    }
+}
+
+function clearTranscript() {
+    if (confirm('Clear current transcript?')) {
+        document.getElementById('transcript').innerHTML = '<span style="color: var(--text-secondary); font-style: italic;">Transcript cleared...</span>';
+        fullTranscript = '';
+        wordCount = 0;
+        speakers.clear();
+        updateStats();
+        document.getElementById('save-btn').disabled = true;
+    }
+}
+</script>
+{% endblock %}

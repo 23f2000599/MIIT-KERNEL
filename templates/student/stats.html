@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}My Statistics{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Your Learning Analytics 📊</h1>
+    <p>Track your progress and optimize your study habits</p>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>📚 Study Overview</h3>
+        <div class="stats">
+            <div class="stat-item">
+                <h3>{{ stats.total_sessions }}</h3>
+                <p>Total Sessions</p>
+            </div>
+            <div class="stat-item">
+                <h3>{{ "%.1f"|format(stats.total_hours) }}h</h3>
+                <p>Total Hours</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>🎯 Focus Performance</h3>
+        <div class="stats">
+            <div class="stat-item">
+                <h3>{{ "%.0f"|format(stats.avg_focus_score * 100) }}%</h3>
+                <p>Avg Focus Score</p>
+            </div>
+            <div class="stat-item">
+                <h3>5</h3>
+                <p>Day Streak</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📈 Weekly Study Hours</h3>
+    <div style="height: 300px; background: #f8f9fa; border-radius: 8px; display: flex; align-items: end; justify-content: space-around; padding: 2rem;">
+        <div style="background: #3498db; width: 40px; height: 60%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); font-size: 0.8rem;">Mon</span>
+            <span style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: #3498db;">2.5h</span>
+        </div>
+        <div style="background: #3498db; width: 40px; height: 80%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); font-size: 0.8rem;">Tue</span>
+            <span style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: #3498db;">4.0h</span>
+        </div>
+        <div style="background: #3498db; width: 40px; height: 45%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); font-size: 0.8rem;">Wed</span>
+            <span style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: #3498db;">1.8h</span>
+        </div>
+        <div style="background: #3498db; width: 40px; height: 90%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); font-size: 0.8rem;">Thu</span>
+            <span style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: #3498db;">4.5h</span>
+        </div>
+        <div style="background: #3498db; width: 40px; height: 70%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); font-size: 0.8rem;">Fri</span>
+            <span style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: #3498db;">3.2h</span>
+        </div>
+        <div style="background: #3498db; width: 40px; height: 35%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); font-size: 0.8rem;">Sat</span>
+            <span style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: #3498db;">1.5h</span>
+        </div>
+        <div style="background: #3498db; width: 40px; height: 55%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); font-size: 0.8rem;">Sun</span>
+            <span style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: #3498db;">2.2h</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>⏰ Timer Usage</h3>
+        <div style="margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Pomodoro Timer</span>
+                <span>45%</span>
+            </div>
+            <div style="background: #ecf0f1; height: 8px; border-radius: 4px;">
+                <div style="background: #3498db; height: 100%; width: 45%; border-radius: 4px;"></div>
+            </div>
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Deep Focus Timer</span>
+                <span>30%</span>
+            </div>
+            <div style="background: #ecf0f1; height: 8px; border-radius: 4px;">
+                <div style="background: #27ae60; height: 100%; width: 30%; border-radius: 4px;"></div>
+            </div>
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>52-17 Timer</span>
+                <span>25%</span>
+            </div>
+            <div style="background: #ecf0f1; height: 8px; border-radius: 4px;">
+                <div style="background: #e74c3c; height: 100%; width: 25%; border-radius: 4px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>💕 Matching Stats</h3>
+        <div class="stats">
+            <div class="stat-item">
+                <h3>{{ stats.total_matches }}</h3>
+                <p>Total Matches</p>
+            </div>
+            <div class="stat-item">
+                <h3>{{ stats.accepted_matches }}</h3>
+                <p>Active TAs</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 1rem;">
+            <p><strong>Match Success Rate:</strong> 
+                {% if stats.total_matches > 0 %}
+                    {{ "%.0f"|format((stats.accepted_matches / stats.total_matches) * 100) }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </p>
+            <p><strong>Avg TA Rating:</strong> 4.2 ⭐</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🏆 Achievements</h3>
+    <div class="grid">
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔥</div>
+            <h4>Study Streak</h4>
+            <p>5 days in a row</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏰</div>
+            <h4>Time Master</h4>
+            <p>50+ hours studied</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
+            <h4>Focus Champion</h4>
+            <p>90%+ focus score</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">💕</div>
+            <h4>Social Learner</h4>
+            <p>5+ TA matches</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📊 Productivity Insights</h3>
+    <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+        <h4 style="color: #27ae60; margin-bottom: 0.5rem;">✅ What's Working Well</h4>
+        <ul style="margin: 0; padding-left: 1.5rem;">
+            <li>Your focus scores are consistently above 85%</li>
+            <li>Thursday is your most productive day (4.5h average)</li>
+            <li>Pomodoro timer works best for you</li>
+        </ul>
+    </div>
+    
+    <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+        <h4 style="color: #856404; margin-bottom: 0.5rem;">💡 Suggestions for Improvement</h4>
+        <ul style="margin: 0; padding-left: 1.5rem;">
+            <li>Try studying more on weekends to maintain consistency</li>
+            <li>Consider using Deep Focus timer for longer subjects</li>
+            <li>Schedule regular sessions with your matched TAs</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

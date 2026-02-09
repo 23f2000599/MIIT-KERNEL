@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>User Management 👥</h1>
+    <p>Manage users, roles, and permissions across the platform</p>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3>All Users ({{ users|length }})</h3>
+        <button class="btn btn-success" onclick="addUser()">+ Add User</button>
+    </div>
+    
+    <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+        <input type="text" placeholder="Search users..." style="flex: 1; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" onkeyup="searchUsers(this.value)">
+        <select onchange="filterByRole(this.value)" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="all">All Roles</option>
+            <option value="student">Students</option>
+            <option value="ta">Teaching Assistants</option>
+            <option value="admin">Administrators</option>
+        </select>
+        <select onchange="filterByStatus(this.value)" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+        </select>
+    </div>
+</div>
+
+{% if users %}
+<div class="card">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6;">User</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6;">Role</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6;">Status</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6;">Joined</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6;">Activity</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersTable">
+                {% for user in users %}
+                <tr class="user-row" data-role="{{ user.role }}" data-status="{% if user.is_active %}active{% else %}inactive{% endif %}" data-name="{{ user.name|lower }}" data-email="{{ user.email|lower }}">
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">
+                        <div style="display: flex; align-items: center;">
+                            <img src="https://via.placeholder.com/40x40/3498db/ffffff?text={{ user.name[0] }}" 
+                                 style="border-radius: 50%; margin-right: 0.75rem;" alt="{{ user.name }}">
+                            <div>
+                                <div style="font-weight: bold;">{{ user.name }}</div>
+                                <div style="font-size: 0.8rem; color: #666;">{{ user.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">
+                        <span style="background: {% if user.role == 'admin' %}#e74c3c{% elif user.role == 'ta' %}#f39c12{% else %}#3498db{% endif %}; color: white; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.8rem; text-transform: capitalize;">
+                            {{ user.role }}
+                        </span>
+                    </td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">
+                        <span style="background: {% if user.is_active %}#27ae60{% else %}#95a5a6{% endif %}; color: white; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.8rem;">
+                            {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">
+                        {{ user.created_at.strftime('%b %d, %Y') }}
+                    </td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">
+                        <div style="font-size: 0.8rem; color: #666;">
+                            {% if user.role == 'student' %}
+                                <div>Study hours: 25.5h</div>
+                                <div>Last session: 2h ago</div>
+                            {% elif user.role == 'ta' %}
+                                <div>Teaching hours: 15h</div>
+                                <div>Students: 8</div>
+                            {% else %}
+                                <div>Last login: 1h ago</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #dee2e6;">
+                        <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                            <button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="viewUser({{ user.id }})">👁️</button>
+                            <button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="editUser({{ user.id }})">✏️</button>
+                            {% if user.is_active %}
+                            <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="suspendUser({{ user.id }})">🚫</button>
+                            {% else %}
+                            <button class="btn btn-success" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="activateUser({{ user.id }})">✅</button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>📊 User Statistics</h3>
+    <div class="stats">
+        <div class="stat-item">
+            <h3>{{ users|selectattr('role', 'equalto', 'student')|list|length }}</h3>
+            <p>Students</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ users|selectattr('role', 'equalto', 'ta')|list|length }}</h3>
+            <p>Teaching Assistants</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ users|selectattr('role', 'equalto', 'admin')|list|length }}</h3>
+            <p>Administrators</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ users|selectattr('is_active', 'equalto', true)|list|length }}</h3>
+            <p>Active Users</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📈 Registration Trends</h3>
+    <div style="height: 200px; background: #f8f9fa; border-radius: 8px; display: flex; align-items: end; justify-content: space-around; padding: 2rem;">
+        <div style="background: #3498db; width: 40px; height: 30%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">Week 1</span>
+        </div>
+        <div style="background: #3498db; width: 40px; height: 50%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">Week 2</span>
+        </div>
+        <div style="background: #3498db; width: 40px; height: 80%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">Week 3</span>
+        </div>
+        <div style="background: #3498db; width: 40px; height: 90%; border-radius: 4px 4px 0 0; position: relative;">
+            <span style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem;">Week 4</span>
+        </div>
+    </div>
+    <p style="text-align: center; margin-top: 1rem; color: #666;">New user registrations per week</p>
+</div>
+
+<script>
+function searchUsers(query) {
+    const rows = document.querySelectorAll('.user-row');
+    rows.forEach(row => {
+        const name = row.dataset.name;
+        const email = row.dataset.email;
+        const visible = name.includes(query.toLowerCase()) || email.includes(query.toLowerCase());
+        row.style.display = visible ? '' : 'none';
+    });
+}
+
+function filterByRole(role) {
+    const rows = document.querySelectorAll('.user-row');
+    rows.forEach(row => {
+        const userRole = row.dataset.role;
+        const visible = role === 'all' || userRole === role;
+        row.style.display = visible ? '' : 'none';
+    });
+}
+
+function filterByStatus(status) {
+    const rows = document.querySelectorAll('.user-row');
+    rows.forEach(row => {
+        const userStatus = row.dataset.status;
+        const visible = status === 'all' || userStatus === status;
+        row.style.display = visible ? '' : 'none';
+    });
+}
+
+function addUser() {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
+        align-items: center; z-index: 1000;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 10px; max-width: 500px; width: 90%;">
+            <h3>Add New User</h3>
+            
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Name:</label>
+                <input type="text" id="newUserName" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Email:</label>
+                <input type="email" id="newUserEmail" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Role:</label>
+                <select id="newUserRole" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="student">Student</option>
+                    <option value="ta">Teaching Assistant</option>
+                    <option value="admin">Administrator</option>
+                </select>
+            </div>
+            
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem;">Temporary Password:</label>
+                <input type="password" id="newUserPassword" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button class="btn btn-success" onclick="createUser()">Create User</button>
+                <button class="btn" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function createUser() {
+    const name = document.getElementById('newUserName').value;
+    const email = document.getElementById('newUserEmail').value;
+    const role = document.getElementById('newUserRole').value;
+    const password = document.getElementById('newUserPassword').value;
+    
+    if (name && email && password) {
+        alert(`Creating user: ${name} (${email}) as ${role}... (Feature coming soon!)`);
+        closeModal();
+    } else {
+        alert('Please fill in all fields.');
+    }
+}
+
+function viewUser(userId) {
+    alert(`Viewing detailed profile for user ${userId}... (Feature coming soon!)`);
+}
+
+function editUser(userId) {
+    alert(`Editing user ${userId}... (Feature coming soon!)`);
+}
+
+function suspendUser(userId) {
+    if (confirm('Are you sure you want to suspend this user? They will lose access to the platform.')) {
+        alert(`Suspending user ${userId}... (Feature coming soon!)`);
+    }
+}
+
+function activateUser(userId) {
+    if (confirm('Activate this user account?')) {
+        alert(`Activating user ${userId}... (Feature coming soon!)`);
+    }
+}
+
+function closeModal() {
+    const modal = document.querySelector('div[style*="position: fixed"]');
+    if (modal) modal.remove();
+}
+</script>
+{% endblock %}
