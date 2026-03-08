@@ -29,12 +29,21 @@ A comprehensive study management platform with timer functionality, TA matching,
    pip install -r requirements.txt
    ```
 
-2. **Run the Application**
+2. **Configure Environment Variables**
+   ```bash
+   # Create .env file from example
+   cp .env.example .env
+   
+   # Add your Groq API key to .env
+   GROQ_API_KEY=your_groq_api_key_here
+   ```
+
+3. **Run the Application**
    ```bash
    python app.py
    ```
 
-3. **Access the Application**
+4. **Access the Application**
    - Open your browser and go to `http://localhost:5000`
    - The database will be automatically created on first run
 
